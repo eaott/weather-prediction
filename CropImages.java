@@ -1,6 +1,7 @@
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.nio.file.Files;
 
 import javax.imageio.ImageIO;
 
@@ -34,7 +35,7 @@ public class CropImages {
 			String filename = String.format("%s_crop.gif", f.substring(0, f.lastIndexOf(".gif")));
 			ImageIO.write(crop, "gif", new File(dir, filename));
 			
-			orig.delete();
+			Files.deleteIfExists(orig.toPath());
 		}
 	}
 
