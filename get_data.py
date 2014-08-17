@@ -18,7 +18,7 @@ def shouldTryAgain(filename):
 startTime = time.time()
 
 
-for x in xrange(2, 120 + 1):
+for x in xrange(2, 15 + 1):
 	curTime = time.gmtime(time.time() - x * 60)
 
 	year = curTime.tm_year
