@@ -5,3 +5,4 @@ located in Albuquerque (see http://forecast.weather.gov/jetstream/doppler/ridge_
 more information.
 
 Last run: 20140816_0205
+update
