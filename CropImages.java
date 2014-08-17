@@ -9,6 +9,8 @@ public class CropImages {
 
 	public static void main(String[] args) throws Throwable{		
 		File dir = new File("data");
+		if (!dir.exists())
+			return;
 
 		String[] files = dir.list(new FilenameFilter(){
 			@Override
