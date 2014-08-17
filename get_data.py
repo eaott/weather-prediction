@@ -18,7 +18,7 @@ def shouldTryAgain(filename):
 startTime = time.time()
 
 
-for x in xrange(2, 60 + 1):
+for x in xrange(2, 120 + 1):
 	curTime = time.gmtime(time.time() - x * 60)
 
 	year = curTime.tm_year
@@ -33,7 +33,10 @@ for x in xrange(2, 60 + 1):
 	# to see exactly where the radar is, etc.
 	radarUrl = "http://radar.weather.gov/ridge/RadarImg/NCR/ABX/ABX_%s_NCR.gif" % filename
 	localUrl = "data/%s.gif" % filename
-
+	try:
+		os.stat(os.path.dirname(localUrl))
+	except:
+		os.mkdir(os.path.dirname(localUrl))
 
 	if shouldTryAgain(localUrl):
 		try:
