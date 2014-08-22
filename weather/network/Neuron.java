@@ -4,21 +4,23 @@ import weather.util.ActivationFunction;
 
 public class Neuron {
 	double[] weights;
-	Neuron[] inputs;
+	int[] inputs;
 	double curValue;
+	Network n;
 	ActivationFunction fn;
 
 	// Used for input nodes.
 	public Neuron()
 	{
 		weights = new double[0];
-		inputs = new Neuron[0];
+		inputs = new int[0];
 	}
-	public Neuron(Neuron[] in, double[] w, ActivationFunction fn)
+	public Neuron(int[] in, double[] w, Network n, ActivationFunction fn)
 	{
 		inputs = in;
 		weights = w;
 		this.fn = fn;
+		this.n = n;
 	}
 	public double setValue(double val)
 	{
@@ -29,6 +31,10 @@ public class Neuron {
 	public double[] getWeights()
 	{
 		return weights;
+	}
+	public int[] getInputs()
+	{
+		return inputs;
 	}
 	/**
 	 * Should be called in succession from input neurons
@@ -41,7 +47,7 @@ public class Neuron {
 		curValue = 0;
 		for (int i = 0; i < weights.length; i++)
 		{
-			curValue += weights[i] * inputs[i].getValue();
+			curValue += weights[i] * n.getNeuron(inputs[i]).getValue();
 		}
 		// FIXME make sure this is correct.
 		curValue = fn.compute(curValue);

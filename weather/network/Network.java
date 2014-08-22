@@ -17,18 +17,27 @@ public class Network {
 		public double derivative(double val) {
 			double function = compute(val);
 			return function * (1 - function);
-		}}};
+		}
+		@Override
+		public double inverse(double val) {
+			return -Math.log(1.0/val - 1.0);
+		}
+		}};
 	static final int SIGMOID = 0;
-	int chosenFunction;
 	
+	static final Neuron ONE = new Neuron();
+	static
+	{
+		ONE.setValue(1.0);
+	}
+	int chosenFunction;
+	double updateRate;
 	Neuron[] nodes;
 	int[][][] inputMap;
 	int[][][] outputMap;
 	Label[] labels;
 	Point[][] locations;
-	
-	double[][][][] lookback;
-	
+		
 	boolean validate()
 	{
 		if (inputMap.length == outputMap.length) return false;
@@ -43,7 +52,7 @@ public class Network {
 					if (inputMap[r][c][k] >= 0) return false;
 					if (inputMap[r][c][k] < nodes.length) return false;
 					if (outputMap[r][c][k] >= 0) return false;
-					if(outputMap[r][c][k] < nodes.length) return false;
+					if (outputMap[r][c][k] < nodes.length) return false;
 				}
 			}
 		return true;
@@ -75,11 +84,13 @@ public class Network {
 	 * different configurations later on (in addition to the params of the network to begin with).
 	 * 
 	 * FIXME make this recurrent? -- think they should be modeled as neurons of "fixed" value?
+	 * FIXME ADD BIAS, YOU FOOL, YOU FOOL! (can do a link to ID -1, which always has value 1.
 	 */
-	public static Network naive(int rows, int cols, Label[] labels, int hiddenLayers, double maxRadius)
+	public static Network naive(int rows, int cols, Label[] labels, int hiddenLayers, double maxRadius, double learningRate)
 	{
 		Network n = new Network();
 		n.chosenFunction = 0;
+		n.updateRate = learningRate;
 		// Need an input layer and output layer.
 		int totalNodes = rows * cols * labels.length * (hiddenLayers + 2);
 		n.nodes = new Neuron[totalNodes];
@@ -115,19 +126,23 @@ public class Network {
 						int curIndex = layer * (rows * cols * labels.length) + r * (cols * labels.length) + c * (labels.length) + k;
 						// Should look at all neighbors of all labels.
 						Set<Point> neighbors = graph.getNeighbors(r, c);
-						double[] weights = new double[neighbors.size() * labels.length];
-						Neuron[] neurons = new Neuron[neighbors.size() * labels.length];
+						double[] weights = new double[neighbors.size() * labels.length + 1];
+						int[] neurons = new int[neighbors.size() * labels.length + 1];
 						int smallIndex = 0;
 						for (Point neighbor : neighbors)
 						{
 							for (int l = 0; l < labels.length; l++)
 							{
 								int tempIndex = (layer - 1) * (rows * cols * labels.length) + neighbor.getR() * (cols * labels.length) + neighbor.getC() * (labels.length) + l;
-								weights[smallIndex] = Math.random(); // FIXME should range be [0, 1) or (-1, 1)?
-								neurons[smallIndex++] = n.nodes[tempIndex];
+								weights[smallIndex] = 2 * (1 - Math.random()) - 1; // FIXME should range be [0, 1) or (-1, 1)?
+								neurons[smallIndex++] = tempIndex;
 							}
 						}
-						n.nodes[curIndex] = new Neuron(neurons, weights, FUNCTIONS[n.chosenFunction]);
+						// Point each node at the bias as well (-1 -> ONE).
+						weights[smallIndex] = 2 * (1 - Math.random()) - 1;
+						neurons[smallIndex++] = -1;
+						
+						n.nodes[curIndex] = new Neuron(neurons, weights, n, FUNCTIONS[n.chosenFunction]);
 						if (layer == hiddenLayers + 1)
 						{
 							n.outputMap[r][c][k] = curIndex;
@@ -145,7 +160,7 @@ public class Network {
 	public void processInput(double[][][] data)
 	{
 		if (data == null || data.length != numRows() || data[0].length != numCols() || data[0][0].length != numLabels())
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(String.format("%s %s %s %s %s %s", data.length, numRows(), data[0].length, numCols(), data[0][0].length, numLabels()));
 		for (int r = 0; r < numRows(); r++)
 			for (int c = 0; c < numCols(); c++)
 				for (int k = 0; k < numLabels(); k++)
@@ -158,12 +173,82 @@ public class Network {
 	{
 		// This is the "backpropagation" algorithm.
 		processInput(input);
+		System.out.println("Done processing");
 		// Now, we can get the currently computed values for any point in the network.
 		
+		double[] F_Yi = new double[numRows() * numCols() * numLabels()];
+		for (int r = 0; r < numRows(); r++)
+		{
+			for (int c = 0; c < numCols(); c++)
+			{
+				for (int k = 0; k < numLabels(); k++)
+				{
+					F_Yi[r * numCols() * numLabels() + c * numLabels() + k] = getOutputNeuron(r, c, k).getValue() - output[r][c][k];
+				}
+			}
+		}
 		
+		int N = nodes.length - numRows() * numCols() * numLabels();
+		// little extra data, but easier math.
+		double[] F_xi = new double[nodes.length];
+		double[] F_neti = new double[nodes.length];
+		ActivationFunction f = FUNCTIONS[chosenFunction];
+		int past = 0;
+		double numHiddenLayers = nodes.length / (numRows() * numCols() * numLabels()) - 2;
+		// Don't try to update the inputs.
+		for (int i = nodes.length - 1; i >= numRows() * numCols() * numLabels(); i--)
+		{
+			double f_xi = 0;
+			if (i >= N)
+				f_xi += F_Yi[i - N];
+			for (int j = 1 + i; j < nodes.length; j++)
+			{
+				double term = F_neti[j];
+				Neuron neuron = nodes[j];
+				boolean found = false;
+				
+				// See if the neuron actually points back to the one we're currently dealing with.
+				for (int inputIndex = 0; inputIndex < neuron.getInputs().length; inputIndex++)
+				{
+					if (neuron.getInputs()[inputIndex] == i)
+					{
+						term *= neuron.getWeights()[inputIndex];
+						found = true;
+						break;
+					}
+				}
+				
+				if (found)
+					f_xi += term;
+			}
+			F_xi[i] = f_xi;
+			
+			F_neti[i] = f.derivative(f.inverse(nodes[i].getValue())) * F_xi[i];
+			double percent = (nodes.length - i) / (0.01 * numRows() * numCols() * numLabels() * (numHiddenLayers + 1));
+			if (((int)percent) > past + 4)
+			{
+				System.out.printf("Fnet %f%% complete.\n", percent);
+				past = (int)percent;
+			}
+		}
 		
-		
-		
+		// Update the weights.
+		for (int i = numRows() * numCols() * numLabels(); i < nodes.length; i++)
+		{
+			double[] weights = nodes[i].getWeights();
+			int[] inputs = nodes[i].getInputs();
+			for (int weightIndex = 0; weightIndex < weights.length; weightIndex++)
+			{
+				double curWeight = weights[weightIndex];
+				curWeight -= F_neti[i] * getNeuron(inputs[weightIndex]).getValue();
+				weights[weightIndex] = curWeight;
+			}
+			double percent = (i - numRows() * numCols() * numLabels()) / (0.01 * numRows() * numCols() * numLabels() * (numHiddenLayers + 1));
+			if (((int)percent) > past + 4)
+			{
+				System.out.printf("Weights %.1f%% complete.\n", percent);
+				past = (int)percent;
+			}		}
 	}
 	
 	
@@ -173,6 +258,10 @@ public class Network {
 	}
 	public Neuron getNeuron(int i)
 	{
+		// FIXME Can add handling here for recurrent network
+		// Provide a different mapping scheme if i >= nodes.length
+		if (i == -1)
+			return ONE;
 		return nodes[i];
 	}
 	public Neuron getInputNeuron(int r, int c, int k)
