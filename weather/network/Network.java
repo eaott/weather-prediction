@@ -90,6 +90,7 @@ public class Network {
 	 */
 	public static Network naive(int rows, int cols, Label[] inputLabels, Label[] outputLabels, int hiddenLayers, double maxRadius, double learningRate)
 	{
+		// LOOK HERE
 		Network n = new Network();
 		n.chosenFunction = 0;
 		n.updateRate = learningRate;

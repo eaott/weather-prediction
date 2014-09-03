@@ -1,4 +1,6 @@
 cd C:\Users\Evan\GitProjects\weather-prediction
+git add --all .
+git commit -m "temp to save code state"
 git checkout master
 git pull
 cd C:\Users\Evan\GitProjects\weather-prediction\data
