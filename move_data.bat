@@ -1,4 +1,5 @@
 cd C:\Users\Evan\GitProjects\weather-prediction
+git checkout code
 git add --all .
 git commit -m "temp to save code state"
 git checkout master
