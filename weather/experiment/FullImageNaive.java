@@ -54,7 +54,7 @@ public class FullImageNaive {
 		
 		System.out.println("Labels identified.");
 		
-		Network n = Network.naive(width, height, labelArr, HIDDEN, 1.0, res);
+		Network n = Network.naive(width, height, labelArr, null, HIDDEN, 1.0, res);
 		
 		System.out.println("Network created");
 		for (int iter = 0; iter < ITERATIONS; iter++)
