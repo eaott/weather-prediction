@@ -45,12 +45,13 @@ public class Network {
 		if (inputMap.length == outputMap.length) return false;
 		if (inputMap[0].length == outputMap[0].length) return false;
 		if (inputMap[0][0].length == outputMap[0][0].length) return false;
-		if (inputLabels.length == outputMap[0][0].length) return false;
+		if (outputLabels.length == outputMap[0][0].length) return false;
 		for (int r = 0; r < inputMap.length; r++)
 			for (int c = 0; c < inputMap[0].length; c++)
 			{
 				for (int k = 0; k < inputLabels.length; k++)
 				{
+					// FIXME is this necessary? Can allow alternate addressing schemes
 					if (inputMap[r][c][k] >= 0) return false;
 					if (inputMap[r][c][k] < nodes.length) return false;
 					if (outputMap[r][c][k] >= 0) return false;
@@ -115,7 +116,7 @@ public class Network {
 			}
 		}
 		
-		// FIXME num in layer
+		// FIXME num in layer tabulation.
 		
 		n.outputMap = new int[rows][cols][outputLabels.length];
 		NetworkGraph graph = NetworkGraph.getGraph(n.locations, maxRadius);
@@ -127,7 +128,7 @@ public class Network {
 				for (int c = 0; c < cols; c++)
 				{
 					for (int k = 0; k < outputLabels.length; k++)
-						// FIXME update math for output instead.
+						// FIXME update math for output instead, also allow scaling... Maybe just do linear fit for number of layers? Can always change it.
 					{
 						int curIndex = layer * (rows * cols * inputLabels.length) + r * (cols * inputLabels.length) + c * (inputLabels.length) + k;
 						// Should look at all neighbors of all labels.
@@ -172,6 +173,7 @@ public class Network {
 			for (int c = 0; c < numCols(); c++)
 				for (int k = 0; k < numInputLabels(); k++)
 					getInputNeuron(r, c, k).setValue(data[r][c][k]);
+		// FIXME Can ||-ize if necessary here.
 		for (int i = 0; i < nodes.length; i++)
 			nodes[i].recompute();
 	}
@@ -203,6 +205,7 @@ public class Network {
 		int past = 0;
 		double numHiddenLayers = nodes.length / (numRows() * numCols() * numInputLabels()) - 2;
 		// Don't try to update the inputs.
+		// FIXME this is where to take advantage of the layer structure...
 		for (int i = nodes.length - 1; i >= numRows() * numCols() * numInputLabels(); i--)
 		{
 			double f_xi = 0;
