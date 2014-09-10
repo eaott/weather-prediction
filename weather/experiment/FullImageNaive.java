@@ -21,8 +21,9 @@ public class FullImageNaive {
 		final int HIDDEN = Integer.parseInt(args[1]);
 		final double res = Double.parseDouble(args[2]);
 		
-		File dir = new File("data2");
-		String[] files = dir.list();
+		File dirIn = new File("data2/input");
+		File dirOut = new File("data2/output");
+		String[] files = dirIn.list();
 		Arrays.sort(files, new Comparator<String>(){
 			@Override
 			public int compare(String arg0, String arg1) {
@@ -33,7 +34,7 @@ public class FullImageNaive {
 		int width = 0, height = 0;
 		for (String f : files)
 		{
-			File file = new File(dir, f);
+			File file = new File(dirIn, f);
 			BufferedImage img = ImageIO.read(file);
 			width = img.getWidth();
 			height = img.getHeight();
@@ -54,7 +55,7 @@ public class FullImageNaive {
 		
 		System.out.println("Labels identified.");
 		
-		Network n = Network.naive(width, height, labelArr, null, HIDDEN, 1.0, res);
+		Network n = Network.naiveLinear(width, height, labelArr, labelArr, HIDDEN, 1.0, res);
 		
 		System.out.println("Network created");
 		for (int iter = 0; iter < ITERATIONS; iter++)
@@ -63,7 +64,7 @@ public class FullImageNaive {
 			int i = 1;
 			for (String f : files)
 			{
-				File file = new File(dir, f);
+				File file = new File(dirIn, f);
 				BufferedImage img = ImageIO.read(file);
 				double[][][] output = new double[img.getWidth()][img.getHeight()][labelArr.length];
 				for (int x = img.getMinX(); x < img.getWidth(); x++)
@@ -86,7 +87,7 @@ public class FullImageNaive {
 		for (int i = 0; i < files.length - 1; i++)
 		{
 			String f = files[i];
-			File file = new File(dir, f);
+			File file = new File(dirIn, f);
 			BufferedImage img = ImageIO.read(file);
 			double[][][] input = new double[img.getWidth()][img.getHeight()][labelArr.length];
 			for (int x = img.getMinX(); x < img.getWidth(); x++)
@@ -105,7 +106,7 @@ public class FullImageNaive {
 							maxIndex = k;
 					img.setRGB(x, y, (int)labelArr[maxIndex].getValue());
 				}
-			ImageIO.write(img, "gif", new File(dir, files[i + 1] + "_predicted.gif"));
+			ImageIO.write(img, "gif", new File(dirOut, files[i + 1] + "_predicted.gif"));
 			System.out.println(f + " complete");
 		}
 	}
