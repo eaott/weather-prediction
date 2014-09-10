@@ -10,6 +10,12 @@ public class NetworkGraph {
 	private double maxDistance;
 	private Point[][] network;
 	private NetworkGraph(){}
+	/**
+	 * Guaranteed to include the Point corresponding to (r, c).
+	 * @param r
+	 * @param c
+	 * @return
+	 */
 	public Set<Point> getNeighbors(int r, int c)
 	{
 		if (neighbors != null)

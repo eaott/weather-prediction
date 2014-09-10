@@ -1,1 +1,0 @@
-Run with FullImageNaive 20 iterations, 0.1 update speed, and I believe 3 hidden layers. Maybe 5.
