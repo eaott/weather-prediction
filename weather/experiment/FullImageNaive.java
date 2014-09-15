@@ -13,10 +13,13 @@ import javax.imageio.ImageIO;
 
 import weather.network.Label;
 import weather.network.Network;
+import weather.process.LoopyBP;
+import weather.util.PairwiseFunction;
 
 public class FullImageNaive {
 	public static void main(String[] args) throws Throwable
 	{
+		long start = System.currentTimeMillis();
 		final int ITERATIONS = Integer.parseInt(args[0]);
 		final int HIDDEN = Integer.parseInt(args[1]);
 		final double res = Double.parseDouble(args[2]);
@@ -57,7 +60,7 @@ public class FullImageNaive {
 		
 		Network n = Network.naiveLinear(width, height, labelArr, labelArr, HIDDEN, 1.0, res);
 		
-		System.out.println("Network created");
+		System.out.println("Network created " + (System.currentTimeMillis() - start));
 		for (int iter = 0; iter < ITERATIONS; iter++)
 		{
 			double[][][] input = null;
@@ -80,8 +83,9 @@ public class FullImageNaive {
 				}
 				input = output;
 			}
-			System.out.println("Training iteration " + iter + " complete.");
+			System.out.println("Training iteration " + iter + " complete. " + (System.currentTimeMillis() - start));
 		}
+		
 		
 		// Model is trained
 		for (int i = 0; i < files.length - 1; i++)
@@ -97,17 +101,30 @@ public class FullImageNaive {
 					input[x][y][curLabel] = 1;
 				}
 			n.processInput(input);
-			for (int x = img.getMinX(); x < img.getWidth(); x++)
-				for (int y = img.getMinY(); y < img.getHeight(); y++)
+			// Potts inference (already normalized).
+			double[][][] output = LoopyBP.infer(n, 4, new PairwiseFunction(){
+				@Override
+				public double prob(Network n, int rA, int cA, int kA, int rB,
+						int cB, int kB) {
+					return kA == kB ? .56: .44;
+				}});
+			double[][][] next = new double[output.length][output[0].length][output[0][0].length];
+			for (int x = 0; x < output.length; x++)
+				for (int y = 0; y < output[0].length; y++)
 				{
 					int maxIndex = 0;
-					for (int k = 0; k < labelArr.length; k++)
-						if (n.getOutputNeuron(x, y, maxIndex).getValue() < n.getOutputNeuron(x, y, k).getValue())
+					for (int k = 0; k < output[0][0].length; k++)
+					{
+						if (output[x][y][maxIndex] < output[x][y][k])
 							maxIndex = k;
+					}
+					next[x][y][maxIndex] = 1;
 					img.setRGB(x, y, (int)labelArr[maxIndex].getValue());
 				}
-			ImageIO.write(img, "gif", new File(dirOut, files[i + 1] + "_predicted.gif"));
-			System.out.println(f + " complete");
+			ImageIO.write(img, "gif", new File(dirOut, files[i + 1].substring(0, files[i+1].length() - 4) + "_predicted.gif"));
+			System.out.println(files[i+1] + " complete");
+			input = next;
 		}
+		System.out.println(System.currentTimeMillis() - start);
 	}
 }

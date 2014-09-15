@@ -55,7 +55,9 @@ public class Network {
 	Point[][] locations;
 	// Total number of nodes in each layer. layerSizes[0] is rows * cols * inputLabels.length, layerSizes[layerSizes.length - 1] is rows * cols * outputLabels.length
 	int[] layerSizes;
+	NetworkGraph graph;
 	
+	// FIXME convert to 2 * NCPU
 	ExecutorService threadPool = Executors.newFixedThreadPool(8);
 
 	private Network()
@@ -134,10 +136,12 @@ public class Network {
 		n.outputMap = new int[rows][cols][outputLabels.length];
 		
 		NetworkGraph graph = NetworkGraph.getGraph(n.locations, maxRadius);
+		n.graph = graph;
 		// Start numbering at the first "hidden"/output node.
 		int curIndex = rows * cols * inputLabels.length;
 		
 		// Do hidden layers AND the output layer.
+		// FIXME multithread the creation?
 		for (int layer = 1; layer < n.numLayers(); layer++)
 		{
 			final int curLayerStart = curIndex;
@@ -405,5 +409,9 @@ public class Network {
 	public int numInLayer(int layer)
 	{
 		return layerSizes[layer];
+	}
+	public NetworkGraph getGraph()
+	{
+		return graph;
 	}
 }

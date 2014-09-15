@@ -27,7 +27,7 @@ public class NetworkGraph {
 	{
 		Set<Point> points = new HashSet<>();
 		fill(points, r, c, r, c);
-		points.remove(network[r][c]);
+//		points.remove(network[r][c]);
 		return points;
 	}
 	

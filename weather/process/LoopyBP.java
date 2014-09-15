@@ -12,14 +12,17 @@ public class LoopyBP {
 	/**
 	 * 2d array of probability distributions.
 	 * [row][col][label]
+	 * 
+	 * FIXME use double[][][] instead, along with network graph
 	 */
-	public static double[][][] infer(Network net, NetworkGraph g, int maxIter, PairwiseFunction fn) {
-		double[][][] initProbs = new double[net.numRows()][net.numCols()][net.numInputLabels()];
+	public static double[][][] infer(Network net, int maxIter, PairwiseFunction fn) {
+		NetworkGraph g = net.getGraph();
+		double[][][] initProbs = new double[net.numRows()][net.numCols()][net.numOutputLabels()];
 		for (int r = 0; r < net.numRows(); r++)
 		{
 			for (int c = 0; c < net.numCols(); c++)
 			{
-				for (int k = 0; k < net.numInputLabels(); k++)
+				for (int k = 0; k < net.numOutputLabels(); k++)
 				{
 					initProbs[r][c][k] = net.getOutputNeuron(r, c, k).getValue();
 				}
@@ -35,7 +38,7 @@ public class LoopyBP {
 			messages = iter(net, g, messages, initProbs, fn);
 		}
 		
-		double[][][] result = new double[net.numRows()][net.numCols()][net.numInputLabels()];
+		double[][][] result = new double[net.numRows()][net.numCols()][net.numOutputLabels()];
 		for (int r = 0; r < net.numRows(); r++)
 		{
 			for (int c = 0; c < net.numCols(); c++)
@@ -43,13 +46,13 @@ public class LoopyBP {
 				Point p = net.getLocation(r, c);
 				double[] probs = result[r][c];
 				// initialize to unary probs -- then multiply the last messages.
-				for (int k = 0; k < net.numInputLabels(); k++)
+				for (int k = 0; k < net.numOutputLabels(); k++)
 					probs[k] = initProbs[r][c][k];
 				
 				for (Point neighbor : messages.get(p).keySet())
 				{
 					double[] mult = messages.get(p).get(neighbor);
-					for (int k = 0; k < net.numInputLabels(); k++)
+					for (int k = 0; k < net.numOutputLabels(); k++)
 					{
 						probs[k] *= mult[k];
 					}
@@ -75,9 +78,9 @@ public class LoopyBP {
 			{
 				// THESE TWO LOOPS REALLY ONLY COUNT AS ONE.
 				
-				double[] pastMessages = new double[net.numInputLabels()];
+				double[] pastMessages = new double[net.numOutputLabels()];
 				Point ptA = net.getLocation(rowA, colA);
-				for (int labelA = 0; labelA < net.numInputLabels(); labelA++)
+				for (int labelA = 0; labelA < net.numOutputLabels(); labelA++)
 				{	
 					double totalPastMessages = 1;
 					// If we have previous messages, incorporate them.
@@ -85,6 +88,8 @@ public class LoopyBP {
 					{
 						for (Point ptU : g.getNeighbors(rowA, colA))
 						{
+							if (ptU.getR() == rowA && ptU.getC() == colA)
+								continue;
 							totalPastMessages *= messages.get(ptA).get(ptU)[labelA];
 						}
 					}
@@ -97,11 +102,11 @@ public class LoopyBP {
 				{
 					if (updated.get(ptB) == null)
 						updated.put(ptB, new HashMap<Point, double[]>());
-					double[] newVals = new double[net.numInputLabels()]; 
+					double[] newVals = new double[net.numOutputLabels()]; 
 					double sumOverAll = 0;
-					for (int labelB = 0; labelB < net.numInputLabels(); labelB++)
+					for (int labelB = 0; labelB < net.numOutputLabels(); labelB++)
 					{
-						for (int labelA = 0; labelA < net.numInputLabels(); labelA++)
+						for (int labelA = 0; labelA < net.numOutputLabels(); labelA++)
 						{
 							double tempVal = initProbs[rowA][colA][labelA];
 							tempVal *= fn.prob(net, rowA, colA, labelA, ptB.getR(), ptB.getC(), labelB);
