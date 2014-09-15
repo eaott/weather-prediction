@@ -88,6 +88,8 @@ public class LoopyBP {
 					{
 						for (Point ptU : g.getNeighbors(rowA, colA))
 						{
+							if (ptU.getR() == rowA && ptU.getC() == colA)
+								continue;
 							totalPastMessages *= messages.get(ptA).get(ptU)[labelA];
 						}
 					}

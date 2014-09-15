@@ -85,27 +85,28 @@ public class FullImageNaive {
 			}
 			System.out.println("Training iteration " + iter + " complete. " + (System.currentTimeMillis() - start));
 		}
-		String f = files[0];
-		File file = new File(dirIn, f);
-		BufferedImage img = ImageIO.read(file);
-		double[][][] input = new double[img.getWidth()][img.getHeight()][labelArr.length];
-		for (int x = img.getMinX(); x < img.getWidth(); x++)
-			for (int y = img.getMinY(); y < img.getHeight(); y++)
-			{
-				int curLabel = map.get(img.getRGB(x, y));
-				input[x][y][curLabel] = 1;
-			}
+		
 		
 		// Model is trained
 		for (int i = 0; i < files.length - 1; i++)
 		{
+			String f = files[0];
+			File file = new File(dirIn, f);
+			BufferedImage img = ImageIO.read(file);
+			double[][][] input = new double[img.getWidth()][img.getHeight()][labelArr.length];
+			for (int x = img.getMinX(); x < img.getWidth(); x++)
+				for (int y = img.getMinY(); y < img.getHeight(); y++)
+				{
+					int curLabel = map.get(img.getRGB(x, y));
+					input[x][y][curLabel] = 1;
+				}
 			n.processInput(input);
 			// Potts inference (already normalized).
 			double[][][] output = LoopyBP.infer(n, 4, new PairwiseFunction(){
 				@Override
 				public double prob(Network n, int rA, int cA, int kA, int rB,
 						int cB, int kB) {
-					return kA == kB ? .7: 0.3;
+					return kA == kB ? .56: .44;
 				}});
 			double[][][] next = new double[output.length][output[0].length][output[0][0].length];
 			for (int x = 0; x < output.length; x++)
