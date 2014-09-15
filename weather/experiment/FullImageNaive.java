@@ -90,7 +90,7 @@ public class FullImageNaive {
 		// Model is trained
 		for (int i = 0; i < files.length - 1; i++)
 		{
-			String f = files[0];
+			String f = files[i];
 			File file = new File(dirIn, f);
 			BufferedImage img = ImageIO.read(file);
 			double[][][] input = new double[img.getWidth()][img.getHeight()][labelArr.length];
