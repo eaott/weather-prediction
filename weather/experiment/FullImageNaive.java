@@ -106,7 +106,9 @@ public class FullImageNaive {
 				@Override
 				public double prob(Network n, int rA, int cA, int kA, int rB,
 						int cB, int kB) {
-					return kA == kB ? .56: .44;
+					double A = 2;
+					double norm = 1 + Math.exp(-A);
+					return kA == kB ? 1.0 / norm : Math.exp(-A) / norm;
 				}});
 			double[][][] next = new double[output.length][output[0].length][output[0][0].length];
 			for (int x = 0; x < output.length; x++)
