@@ -102,14 +102,14 @@ public class FullImageNaive {
 				}
 			n.processInput(input);
 			// Potts inference (already normalized).
-			double[][][] output = LoopyBP.infer(n, 4, new PairwiseFunction(){
+			double[][][] output = LoopyBP.infer(input, 4, new PairwiseFunction(){
 				@Override
-				public double prob(Network n, int rA, int cA, int kA, int rB,
+				public double prob(int rA, int cA, int kA, int rB,
 						int cB, int kB) {
 					double A = 2;
 					double norm = 1 + Math.exp(-A);
 					return kA == kB ? 1.0 / norm : Math.exp(-A) / norm;
-				}});
+				}}, n.getGraph());
 			double[][][] next = new double[output.length][output[0].length][output[0][0].length];
 			for (int x = 0; x < output.length; x++)
 				for (int y = 0; y < output[0].length; y++)

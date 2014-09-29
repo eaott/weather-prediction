@@ -23,6 +23,11 @@ public class NetworkGraph {
 		return generate(r, c);
 	}
 	
+	public Point[][] getAllPoints()
+	{
+		return network;
+	}
+	
 	private Set<Point> generate(int r, int c)
 	{
 		Set<Point> points = new HashSet<>();

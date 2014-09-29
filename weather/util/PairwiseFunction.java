@@ -8,5 +8,5 @@ import weather.network.Network;
  * @author Evan
  */
 public interface PairwiseFunction {
-	double prob(Network n, int rA, int cA, int kA, int rB, int cB, int kB);
+	double prob(int rA, int cA, int kA, int rB, int cB, int kB);
 }
