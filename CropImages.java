@@ -5,6 +5,7 @@ import java.nio.file.Files;
 
 import javax.imageio.ImageIO;
 
+@Deprecated
 public class CropImages {
 
 	public static void main(String[] args) throws Throwable{		
