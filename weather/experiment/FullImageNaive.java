@@ -14,7 +14,9 @@ import javax.imageio.ImageIO;
 import weather.network.Label;
 import weather.network.Network;
 import weather.process.LoopyBP;
+import weather.util.DataIO;
 import weather.util.PairwiseFunction;
+import weather.util.Tuple;
 
 public class FullImageNaive {
 	public static void main(String[] args) throws Throwable
@@ -26,40 +28,27 @@ public class FullImageNaive {
 		
 		File dirIn = new File("data2/input");
 		File dirOut = new File("data2/output");
+		
+		
+		Tuple<Label[], Map<Integer,Integer>> tuple = DataIO.getLabels(dirIn);
+
+		File tempFile = new File(dirIn, dirIn.list()[0]);
+		BufferedImage tempImage = ImageIO.read(tempFile);
+		int width = tempImage.getWidth();
+		int height = tempImage.getHeight();
+
+		Label[] labelArr = tuple.first();
+		Map<Integer, Integer> map = tuple.second();
+		
+		System.out.println("Labels identified.");
+		
+		Network n = Network.naiveLinear(width, height, labelArr, labelArr, HIDDEN, 1.0, res);
 		String[] files = dirIn.list();
 		Arrays.sort(files, new Comparator<String>(){
 			@Override
 			public int compare(String arg0, String arg1) {
 				return arg0.compareTo(arg1);
 			}});
-		
-		Set<Integer> labels = new HashSet<>();
-		int width = 0, height = 0;
-		for (String f : files)
-		{
-			File file = new File(dirIn, f);
-			BufferedImage img = ImageIO.read(file);
-			width = img.getWidth();
-			height = img.getHeight();
-			for (int x = img.getMinX(); x < img.getWidth(); x++)
-				for (int y = img.getMinY(); y < img.getHeight(); y++)
-				{
-					labels.add(img.getRGB(x, y));
-				}
-		}
-		Label[] labelArr = new Label[labels.size()];
-		Map<Integer, Integer> map = new HashMap<>();
-		int index = 0;
-		for (Integer l : labels)
-		{
-			map.put(l.intValue(), index);
-			labelArr[index++] = new Label(index + "", l.intValue());
-		}
-		
-		System.out.println("Labels identified.");
-		
-		Network n = Network.naiveLinear(width, height, labelArr, labelArr, HIDDEN, 1.0, res);
-		
 		System.out.println("Network created " + (System.currentTimeMillis() - start));
 		for (int iter = 0; iter < ITERATIONS; iter++)
 		{
@@ -68,14 +57,7 @@ public class FullImageNaive {
 			for (String f : files)
 			{
 				File file = new File(dirIn, f);
-				BufferedImage img = ImageIO.read(file);
-				double[][][] output = new double[img.getWidth()][img.getHeight()][labelArr.length];
-				for (int x = img.getMinX(); x < img.getWidth(); x++)
-					for (int y = img.getMinY(); y < img.getHeight(); y++)
-					{
-						int curLabel = map.get(img.getRGB(x, y));
-						output[x][y][curLabel] = 1;
-					}
+				double[][][] output = DataIO.getData(file, map);
 				if (input != null)
 				{
 					System.out.println("training " + i++);
@@ -102,14 +84,14 @@ public class FullImageNaive {
 				}
 			n.processInput(input);
 			// Potts inference (already normalized).
-			double[][][] output = LoopyBP.infer(n, 4, new PairwiseFunction(){
+			double[][][] output = LoopyBP.infer(input, 4, new PairwiseFunction(){
 				@Override
-				public double prob(Network n, int rA, int cA, int kA, int rB,
+				public double prob(int rA, int cA, int kA, int rB,
 						int cB, int kB) {
 					double A = 2;
 					double norm = 1 + Math.exp(-A);
 					return kA == kB ? 1.0 / norm : Math.exp(-A) / norm;
-				}});
+				}}, n.getGraph());
 			double[][][] next = new double[output.length][output[0].length][output[0][0].length];
 			for (int x = 0; x < output.length; x++)
 				for (int y = 0; y < output[0].length; y++)
