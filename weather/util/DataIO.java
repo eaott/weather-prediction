@@ -73,4 +73,26 @@ public class DataIO {
 			}
 		return results;
 	}
+
+	public static void writeData(File f, double[][][] data, Map<Integer, Integer> labels)
+	{
+		try 
+		{
+			BufferedImage img = new BufferedImage(data.length, data[0].length, BufferedImage.TYPE_INT_ARGB);
+			for (int r = 0; r < data.length; r++) {
+				for (int c = 0; c < data[0].length; c++) {
+					int maxIndex = 0;
+					for (int k = 0; k < data[0][0].length; k++) {
+						if (data[r][c][k] > data[r][c][maxIndex])
+							maxIndex = k;
+					}
+
+					img.setRGB(r, c, labels.get(maxIndex));
+				}
+			}
+
+			ImageIO.write(img, "gif", f);
+		}
+		catch(Throwable t){}
+	}
 }
