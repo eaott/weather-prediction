@@ -109,23 +109,24 @@ public class Voronoi {
 
 		// This is the slow, dumb way. But it works.
 		for (int r = 0; r < height; r++)
+		{
+			for (int c = 0; c < width; c++)
 			{
-				for (int c = 0; c < width; c++)
+				if (result[r][c] == -1)
 				{
-					if (result[r][c] == -1)
+					int minIndex = 0;
+					for (int i = 1; i < sensors.length; i++)
 					{
-						int minIndex = 0;
-						for (int i = 1; i < sensors.length; i++)
-						{
-							Sensor min = sensors[minIndex];
-							Sensor cur = sensors[i];
-							if (d.dist(min.x, min.y, r, c) > d.dist(cur.x, cur.y, r, c))
-								minIndex = i;
-						}
-						result[r][c] = minIndex;
+						Sensor min = sensors[minIndex];
+						Sensor cur = sensors[i];
+						if (d.dist(min.x, min.y, r, c) > d.dist(cur.x, cur.y, r, c))
+							minIndex = i;
 					}
+					result[r][c] = minIndex;
 				}
 			}
+			System.out.printf("%f%% complete.\n", (r + 0.0) / height * 100);
+		}
 		return result;
 	}
 }
