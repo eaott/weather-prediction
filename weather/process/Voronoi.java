@@ -1,14 +1,17 @@
-package weather.util;
+package weather.process;
 
-import java.util.TreeSet;
+import weather.util.DistanceFunction;
+import weather.util.Point;
+import weather.util.Sensor;
 
 public class Voronoi {
 	public static final double TOLERANCE = 0.0001;
 	/**
 	Assumes Euclidean distance on the whole map. Too difficult to define the bisector line otherwise.
+	 * @param debug TODO
 	*/
 	public static int[][] generateMapSlow(int height, int width,
-			Sensor[] sensors, DistanceFunction d)
+			Point[] sensors, DistanceFunction d, boolean debug)
 	{
 		int[][] result = new int[height][width];
 		for (int i = 0; i < height; i++)
@@ -117,15 +120,15 @@ public class Voronoi {
 					int minIndex = 0;
 					for (int i = 1; i < sensors.length; i++)
 					{
-						Sensor min = sensors[minIndex];
-						Sensor cur = sensors[i];
-						if (d.dist(min.x, min.y, r, c) > d.dist(cur.x, cur.y, r, c))
+						Point min = sensors[minIndex];
+						Point cur = sensors[i];
+						if (d.dist(min.getR(), min.getC(), r, c) > d.dist(cur.getR(), cur.getC(), r, c))
 							minIndex = i;
 					}
 					result[r][c] = minIndex;
 				}
 			}
-			System.out.printf("%f%% complete.\n", (r + 0.0) / height * 100);
+			System.out.printf("Voronoi: %f%% complete.\n", (r + 0.0) / height * 100);
 		}
 		return result;
 	}

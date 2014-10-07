@@ -30,7 +30,7 @@ public class FullImageNaive {
 		File dirOut = new File("data2/output");
 		
 		
-		Tuple<Label[], Map<Integer,Integer>> tuple = DataIO.getLabels(dirIn);
+		Tuple<Label[], Map<Integer,Integer>> tuple = DataIO.getLabels(dirIn, null);
 
 		File tempFile = new File(dirIn, dirIn.list()[0]);
 		BufferedImage tempImage = ImageIO.read(tempFile);

@@ -2,6 +2,7 @@ package weather.util;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -15,9 +16,9 @@ import javax.imageio.ImageIO;
 import weather.network.Label;
 
 public class DataIO {
-	public static Tuple<Label[], Map<Integer, Integer>> getLabels(File dirIn)
+	public static Tuple<Label[], Map<Integer, Integer>> getLabels(File dirIn, FilenameFilter filter)
 	{
-		String[] files = dirIn.list();
+		String[] files = filter == null ? dirIn.list() : dirIn.list(filter);
 		Arrays.sort(files, new Comparator<String>(){
 			@Override
 			public int compare(String arg0, String arg1) {

@@ -17,7 +17,7 @@ public class MovieMaker {
 		String input = "C:\\Users\\Evan\\Dropbox\\THESIS\\input";
 		String output_no = "C:\\Users\\Evan\\Dropbox\\THESIS\\output_no";
 		String output_crf = "C:\\Users\\Evan\\Dropbox\\THESIS\\output_crf";
-		Tuple<Label[], Map<Integer, Integer>> tuple = DataIO.getLabels(new File(output_no));
+		Tuple<Label[], Map<Integer, Integer>> tuple = DataIO.getLabels(new File(output_no), null);
 		
 		go(tuple, new File(input), new File(output_no), new File(output_crf), new File("C:\\Users\\Evan\\Dropbox\\THESIS\\movie\\"));
 	}
