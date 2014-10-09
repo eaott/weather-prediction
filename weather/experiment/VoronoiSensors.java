@@ -44,6 +44,9 @@ public class VoronoiSensors {
 	final static int ITERATIONS = 1;
 	
 	public static void main(String[] args) throws Throwable{
+		System.out.printf("TIME_TOLERANCE: %d\nHIDDEN: %d\nMAX_DISTANCE: %f\n"
+			"LEARNING_RATE: %f\nITERATIONS: %d\n",TIME_TOLERANCE, HIDDEN, MAX_DISTANCE, LEARNING_RATE, ITERATIONS);
+
 		final File rainDir = new File("C:\\Users\\Evan\\Dropbox\\Thesis_Data\\");
 		final File radarDir = new File("C:\\Users\\Evan\\GitProjects\\weather-prediction\\data2\\fullTest\\");
 		final File sensorFile = new File(rainDir, "HydrometBook2.csv");
@@ -58,7 +61,7 @@ public class VoronoiSensors {
 		final long randSeed = 14565415141784562L;
 		
 		// Available radars.
-		final String[] radarCodes = {"EWX", "GRK"};
+		final String[] radarCodes = {"EWX", "GRK"}; //FIXME can look at one at a time.
 		
 		// All available rain sensors.
 		Sensor[] sensorArr = null;
@@ -201,7 +204,34 @@ public class VoronoiSensors {
 			
 			}
 			
-			// n is trained... time for output. FIXME start here... sorry, laptop died...
+
+			// Now, output stats on the difference.
+			double diff1 = 0, diff2 = 0;
+			for (File radarFile : radarFiles)
+			{				
+				double[][][] inputData = DataIO.getData(radarFile, tuple.second());
+				
+				long recordTime = radarParser.parse(radarFile.getName()).getTime();
+
+				double[][][] outputData = getRainfall(voronoi, sensorArr, rainMap, recordTime);
+			
+				double[][][] predictedOutput = n.process(inputData);
+
+				for (int r = 0; r < outputData.length; r++)
+				{
+					for (int c = 0; c < outputData[0].length; c++)
+					{
+						for (int k = 0; k < outputData[0][0].length; k++)
+						{
+							double diff = predictedOutput[r][c][k] - outputData[r][c][k];
+							diff1 += diff;
+							diff2 += diff * diff;
+						}
+					}
+				}
+			}
+			int N = voronoi.length * voronoi[0].length * outputLabels.length;
+			System.out.printf("%s: mean:%.8f stddev:%.8f\n", radarCode, diff1 / N, Math.sqrt(diff2 / (N - 1)));
 		}
 	}
 

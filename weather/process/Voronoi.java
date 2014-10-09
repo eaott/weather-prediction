@@ -128,7 +128,7 @@ public class Voronoi {
 					result[r][c] = minIndex;
 				}
 			}
-			System.out.printf("Voronoi: %f%% complete.\n", (r + 0.0) / height * 100);
+			System.out.printf("\tVoronoi: %f%% complete.\n", (r + 0.0) / height * 100);
 		}
 		return result;
 	}
