@@ -84,6 +84,7 @@ public class FullImageNaive {
 				}
 			n.processInput(input);
 			// Potts inference (already normalized).
+			// FIXME FIXME FIXME this is looking at the input! oh crap!
 			double[][][] output = LoopyBP.infer(input, 4, new PairwiseFunction(){
 				@Override
 				public double prob(int rA, int cA, int kA, int rB,

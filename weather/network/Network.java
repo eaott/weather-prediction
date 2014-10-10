@@ -65,6 +65,11 @@ public class Network {
 		
 	}
 	
+	public void close()
+	{
+		threadPool.shutdownNow();
+	}
+	
 	private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException
 	{
 		
@@ -413,5 +418,15 @@ public class Network {
 	public NetworkGraph getGraph()
 	{
 		return graph;
+	}
+	
+	public double[][][] getOutput()
+	{
+		double[][][] out = new double[numRows()][numCols()][numOutputLabels()];
+		for (int r = 0; r < numRows(); r++)
+			for (int c = 0; c < numCols(); c++)
+				for (int k = 0; k < numOutputLabels(); k++)
+					out[r][c][k] = getOutputNeuron(r, c, k).getValue();
+		return out;
 	}
 }
