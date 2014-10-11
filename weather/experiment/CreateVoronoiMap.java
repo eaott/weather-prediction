@@ -27,10 +27,7 @@ import weather.util.Point;
 import weather.util.Sensor;
 import weather.util.Serializer;
 
-public class CreateVoronoiMap {
-	public static final String VORONOI_PREFIX = "voronoi_";
-	public static final String VORONOI_SUFFIX = ".ser";
-	
+public class CreateVoronoiMap {	
 	public static void main(String[] args) throws Throwable{
 		
 		final File rainDir = new File("C:\\Users\\Evan\\Dropbox\\Thesis_Data\\");
@@ -137,8 +134,7 @@ public class CreateVoronoiMap {
 			// Calculation will take a long time.
 			int[][] data = Voronoi.generateMapSlow(WIDTH, HEIGHT, convertedPoints, DistanceFunction.EUCLIDEAN, true);
 			
-			Serializer.writeVoronoi(data, new File(radarDir, 
-					String.format("%s%s%s", VORONOI_PREFIX, radarCode, VORONOI_SUFFIX)).getAbsolutePath());
+			Serializer.writeVoronoi(data, radarDir, radarCode);
 			
 			BufferedImage img = new BufferedImage(data.length, data[0].length, BufferedImage.TYPE_INT_ARGB);
 			for (int r = 0; r < data.length; r++) {
