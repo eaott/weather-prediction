@@ -42,9 +42,9 @@ public class VoronoiSensors {
 		final long[] TIME_TOLERANCES = {1000 * 60 * 10};
 		final int[] HIDDENS = {0};
 		final double[] MAX_DISTANCES = {1.0, 2.0};
-		final double[] LEARNING_RATES = {0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75};
-		final int[] NUM_ITERATIONS = {1, 2, 4, 8, 16, 32, 64, 128};
-		final double[] TARGET_VALUES = {0.0, 0.25, 0.5, 0.75, 1.0};
+		final double[] LEARNING_RATES = {0.05, 0.25, 0.45, 0.65};
+		final int[] NUM_ITERATIONS = {1, 2, 4, 8, 16, 32, 64};
+		final double[] TARGET_VALUES = {0.0, 0.5, 1.0};
 		CSVPrinter out = new CSVPrinter(new FileWriter(new File(radarDir, "EXPERIMENTS.csv")), CSVFormat.DEFAULT);
 		
 		out.print("TIME_TOLERANCE");
