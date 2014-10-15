@@ -36,16 +36,16 @@ public class VoronoiSensors {
 	static final File sensorFile = new File(rainDir, "HydrometBook2.csv");
 	
 	// Available radars.
-	static final String[] radarCodes = {"EWX", "GRK"};
+	static final String[] radarCodes = {"EWX"};
 	
 	public static void main(String[] args) throws Throwable{
 		final long[] TIME_TOLERANCES = {1000 * 60 * 10};
 		final int[] HIDDENS = {0};
-		final double[] MAX_DISTANCES = {1.0, 2.0};
-		final double[] LEARNING_RATES = {0.05, 0.25, 0.45, 0.65};
-		final int[] NUM_ITERATIONS = {1, 2, 4, 8, 16, 32, 64};
-		final double[] TARGET_VALUES = {0.0, 0.5, 1.0};
-		CSVPrinter out = new CSVPrinter(new FileWriter(new File(radarDir, "EXPERIMENTS.csv")), CSVFormat.DEFAULT);
+		final double[] MAX_DISTANCES = {1.0};
+		final double[] LEARNING_RATES = {0.05};
+		final int[] NUM_ITERATIONS = {1};
+		final double[] TARGET_VALUES = {0.0};
+		CSVPrinter out = new CSVPrinter(new FileWriter(new File(radarDir, "dummy.csv")), CSVFormat.DEFAULT);
 		
 		out.print("TIME_TOLERANCE");
 		out.print("HIDDEN");
@@ -56,7 +56,6 @@ public class VoronoiSensors {
 		out.print("TIME_FOR_ALL_SENSORS");
 		for (String radarCode : radarCodes)
 		{
-			out.print(radarCode + " MEAN");
 			out.print(radarCode + " STD");
 		}
 		out.println();
@@ -99,7 +98,7 @@ public class VoronoiSensors {
 		// Not really needed -- can remove.
 		final long randSeed = 14565415141784562L;
 		
-		double[] RESULT = new double[radarCodes.length * 2];
+		double[] RESULT = new double[radarCodes.length];
 		// All available rain sensors.
 		Sensor[] sensorArr = null;
 		
@@ -186,6 +185,11 @@ public class VoronoiSensors {
 			final int[][] voronoi = radarVoronoiMap.get(radarCode);
 			Tuple<Label[], Map<Integer,Integer>> tuple = DataIO.getLabels(radarDir, filter);
 			Label[] inputLabels = tuple.first();
+			
+			for (int value : tuple.second().keySet())
+				System.out.printf("%x\t", value);
+			System.out.println();
+			
 			Label[] outputLabels = {new Label("rain", 0)};
 			System.out.println("creating network for " + radarCode);
 			Network n = Network.naiveLinear(voronoi.length, voronoi[0].length, inputLabels, outputLabels, HIDDEN, MAX_DISTANCE, LEARNING_RATE);
@@ -204,7 +208,7 @@ public class VoronoiSensors {
 					long recordTime = date.getTime();
 	
 					// FIXME if TARGET_VALUE is included, it actually ignores all rain data.
-					double[][][] outputData = getRainfall(voronoi, sensorArr, rainMap, recordTime, TIME_TOLERANCE, TARGET_VALUE);
+					double[][][] outputData = getRainfall(voronoi, sensorArr, rainMap, recordTime, TIME_TOLERANCE, inputData);
 									
 					n.train(inputData, outputData);
 				}
@@ -213,7 +217,7 @@ public class VoronoiSensors {
 			
 
 			// Now, output stats on the difference.
-			double diff1 = 0, diff2 = 0;
+			double diff2 = 0;
 			for (File radarFile : radarFiles)
 			{				
 				double[][][] inputData = DataIO.getData(radarFile, tuple.second());
@@ -221,7 +225,7 @@ public class VoronoiSensors {
 				long recordTime = radarParser.parse(radarFile.getName()).getTime();
 
 				// FIXME if TARGET_VALUE is included, it actually ignores all rain data.
-				double[][][] outputData = getRainfall(voronoi, sensorArr, rainMap, recordTime, TIME_TOLERANCE, TARGET_VALUE);
+				double[][][] outputData = getRainfall(voronoi, sensorArr, rainMap, recordTime, TIME_TOLERANCE, inputData);
 			
 				n.processInput(inputData);
 				
@@ -234,7 +238,6 @@ public class VoronoiSensors {
 						for (int k = 0; k < outputData[0][0].length; k++)
 						{
 							double diff = predictedOutput[r][c][k] - outputData[r][c][k];
-							diff1 += diff;
 							diff2 += diff * diff;
 						}
 					}
@@ -242,7 +245,6 @@ public class VoronoiSensors {
 			}
 			n.close();
 			int N = voronoi.length * voronoi[0].length * outputLabels.length;
-			RESULT[RESULT_INDEX++] = diff1 / N;
 			RESULT[RESULT_INDEX++] = Math.sqrt(diff2 / (N - 1));
 			System.out.println(radarCode + " done");
 		}
@@ -306,13 +308,17 @@ public class VoronoiSensors {
 			Map<String, TreeMap<Long, Double>> rainMap,
 			long recordTime,
 			final long TIME_TOLERANCE,
-			double TARGET_VALUE)
+			double[][][] input)
 	{
 		double[][][] outputData = new double[voronoi.length][voronoi[0].length][1];
 		for (int r = 0; r < voronoi.length; r++)
 			for (int c = 0; c < voronoi[0].length; c++)
 			{
-				outputData[r][c][0] = TARGET_VALUE;
+				for (int k = 0; k < input[0][0].length; k++)
+				{
+					// FIXME, base this on the input...
+					outputData[r][c][0] = 0.5;
+				}
 			}
 		return outputData;
 	}
