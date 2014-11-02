@@ -11,7 +11,6 @@ def shouldTryAgain(filename):
 			os.remove(filename)
 			return False
 	except Exception, e:
-		print("some exception ", e)
 		return True
 	return True
 
