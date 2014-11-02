@@ -4,12 +4,14 @@ import os
 
 
 def shouldTryAgain(filename):
+	print(filename)
 	try:
 		size = os.path.getsize(filename)
-		if size < 2048:
+		if size < 512:
 			os.remove(filename)
 			return False
 	except Exception, e:
+		print("some exception ", e)
 		return True
 	return True
 
@@ -54,5 +56,5 @@ for x in xrange(2, 20 + 1):
 			urllib.urlretrieve(radarUrlGRK, localUrlGRK)
 			shouldTryAgain(localUrlGRK)
 		except Exception, e:
-			pass	
+			pass
 
