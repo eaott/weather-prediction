@@ -16,7 +16,7 @@ public class NetworkTest {
 	
 	public static double getError(int iterations, int layers, double resolution) {
 		Label[] labels = new Label[] { new Label("A", 0), new Label("B", 1) };
-		Network network = Network.naiveLinear(1, 2, labels, labels, layers, 2.0, resolution);
+		SimpleNetwork network = SimpleNetwork.naiveLinear(1, 2, labels, labels, layers, 2.0, resolution);
 		final int ITERATIONS = iterations;
 		double[][][][] inputData = new double[100][1][2][2];
 		double[][][][] outputData = new double[inputData.length][1][2][2];

@@ -6,7 +6,21 @@ public class Neuron {
 	double[] weights;
 	int[] inputs;
 	double curValue;
-	Network n;
+	int row;
+	public int getRow() {
+		return row;
+	}
+	public void setRow(int row) {
+		this.row = row;
+	}
+	public int getCol() {
+		return col;
+	}
+	public void setCol(int col) {
+		this.col = col;
+	}
+	int col;
+	SimpleNetwork n;
 	ActivationFunction fn;
 
 	// Used for input nodes.
@@ -15,10 +29,12 @@ public class Neuron {
 		weights = new double[0];
 		inputs = new int[0];
 	}
-	public Neuron(int[] in, double[] w, Network n, ActivationFunction fn)
+	public Neuron(int[] in, double[] w, int r, int c, SimpleNetwork n, ActivationFunction fn)
 	{
 		inputs = in;
 		weights = w;
+		row = r;
+		col = c;
 		this.fn = fn;
 		this.n = n;
 	}

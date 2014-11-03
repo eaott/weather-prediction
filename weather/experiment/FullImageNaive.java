@@ -12,7 +12,7 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import weather.network.Label;
-import weather.network.Network;
+import weather.network.SimpleNetwork;
 import weather.process.LoopyBP;
 import weather.util.DataIO;
 import weather.util.PairwiseFunction;
@@ -42,7 +42,7 @@ public class FullImageNaive {
 		
 		System.out.println("Labels identified.");
 		
-		Network n = Network.naiveLinear(width, height, labelArr, labelArr, HIDDEN, 1.0, res);
+		SimpleNetwork n = SimpleNetwork.naiveLinear(width, height, labelArr, labelArr, HIDDEN, 1.0, res);
 		String[] files = dirIn.list();
 		Arrays.sort(files, new Comparator<String>(){
 			@Override
