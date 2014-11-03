@@ -14,7 +14,13 @@ import java.util.concurrent.Future;
 import weather.util.ActivationFunction;
 import weather.util.Point;
 
-public class Network {
+/**
+ * Not most generalized solution. FOR ALL LAYERS,
+ * enforces the radius condition for computational efficiency.
+ * @author Evan
+ *
+ */
+public class SimpleNetwork {
 	static final ActivationFunction[] FUNCTIONS = new ActivationFunction[]{new ActivationFunction(){
 		@Override
 		public double compute(double val) {
@@ -60,7 +66,7 @@ public class Network {
 	// FIXME convert to 2 * NCPU
 	ExecutorService threadPool = Executors.newFixedThreadPool(8);
 
-	private Network()
+	private SimpleNetwork()
 	{
 		
 	}
@@ -75,9 +81,9 @@ public class Network {
 		
 	}
 	
-	public static Network createNetwork(ObjectInputStream stream)
+	public static SimpleNetwork createNetwork(ObjectInputStream stream)
 	{
-		Network n = new Network();
+		SimpleNetwork n = new SimpleNetwork();
 		try {
 			n.readObject(stream);
 		} catch (ClassNotFoundException | IOException e) {
@@ -96,9 +102,9 @@ public class Network {
 	 * FIXME make this recurrent? -- think they should be modeled as neurons of "fixed" value?
 	 * @param outputLabels TODO
 	 */
-	public static Network naiveLinear(int rows, int cols, Label[] inputLabels, Label[] outputLabels, int hiddenLayers, double maxRadius, double learningRate)
+	public static SimpleNetwork naiveLinear(int rows, int cols, Label[] inputLabels, Label[] outputLabels, int hiddenLayers, double maxRadius, double learningRate)
 	{
-		Network n = new Network();
+		SimpleNetwork n = new SimpleNetwork();
 		n.chosenFunction = 0;
 		n.updateRate = learningRate;
 		n.layerSizes = new int[hiddenLayers + 2];
@@ -196,7 +202,7 @@ public class Network {
 						weights[smallIndex] = 2 * (1 - Math.random()) - 1;
 						neurons[smallIndex++] = -1;
 						
-						n.nodes[curIndex] = new Neuron(neurons, weights, n, FUNCTIONS[n.chosenFunction]);
+						n.nodes[curIndex] = new Neuron(neurons, weights, r, c, n, FUNCTIONS[n.chosenFunction]);
 						if (layer == hiddenLayers + 1)
 						{
 							n.outputMap[r][c][k] = curIndex;
@@ -289,29 +295,50 @@ public class Network {
 						if (index >= N)
 							f_xi += F_Yi[index - N];
 						// Now, need all nodes that connect to this one...
-						// For now, just look at the next layer.
-						// FIXME convert to only look at neighbors?
-						for (int j = layerIndex + numInLayer(layer); j < (layer == numLayers() - 1 ? nodes.length : layerIndex + numInLayer(layer) + numInLayer(layer + 1)); j++)
-						{
-							double term = F_neti[j];
-							Neuron neuron = nodes[j];
-							boolean found = false;
-							
-							// See if the neuron actually points back to the one we're currently dealing with.
-							// FIXME surely this can be better... May need to structure this type of storage differenty.
-							for (int inputIndex = 0; inputIndex < neuron.getInputs().length; inputIndex++)
+						// CONSTRAINT: only look at the next layer
+						// CONSTRAINT: only look at neighbors
+						// FIXME HANDLE LOOKING AT LAYER OUTSIDE BOUNDS....
+						
+						int row = nodes[index].getRow();
+						int col = nodes[index].getCol();
+						Set<Point> neighbors = graph.getNeighbors(row, col);
+						
+						// startIndex is thus the base for nodes in the next layer.
+						int startIndex = layerIndex + numInLayer(layer);
+						if (layer != numLayers() - 1)
+							for (Point neighbor : neighbors)
 							{
-								if (neuron.getInputs()[inputIndex] == index)
+								int r = neighbor.getR();
+								int c = neighbor.getC();
+								for (int k = 0; k < numLabelsInLayer(layer + 1); k++)
 								{
-									term *= neuron.getWeights()[inputIndex];
-									found = true;
-									break;
+									int j = startIndex + r * numCols() * numLabelsInLayer(layer + 1) + c * numLabelsInLayer(layer + 1) + k;
+									
+									// ***********************************
+									// OLD CODE
+									
+									double term = F_neti[j];
+									Neuron neuron = nodes[j];
+									boolean found = false;
+									
+									// See if the neuron actually points back to the one we're currently dealing with.
+									// FIXME surely this can be better... May need to structure this type of storage differenty.
+									for (int inputIndex = 0; inputIndex < neuron.getInputs().length; inputIndex++)
+									{
+										if (neuron.getInputs()[inputIndex] == index)
+										{
+											term *= neuron.getWeights()[inputIndex];
+											found = true;
+											break;
+										}
+									}
+									
+									if (found)
+										f_xi += term;
+									// END OLD CODE
+									// *****************************************************
 								}
 							}
-							
-							if (found)
-								f_xi += term;
-						}
 						F_xi[index] = f_xi;
 						
 						F_neti[index] = f.derivative(f.inverse(nodes[index].getValue())) * F_xi[index];
@@ -322,7 +349,9 @@ public class Network {
 			try {
 				futures = threadPool.invokeAll(callables);
 				for (Future<Void> future : futures)
+				{
 					future.get();
+				}
 			} catch (InterruptedException | ExecutionException e) {
 				e.printStackTrace();
 			}
@@ -414,6 +443,10 @@ public class Network {
 	public int numInLayer(int layer)
 	{
 		return layerSizes[layer];
+	}
+	public int numLabelsInLayer(int layer)
+	{
+		return layerSizes[layer] / (numRows() * numCols());
 	}
 	public NetworkGraph getGraph()
 	{
