@@ -2,6 +2,8 @@ package weather.network;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -20,7 +22,7 @@ import weather.util.Point;
  * @author Evan
  *
  */
-public class SimpleNetwork {
+public class SimpleNetwork implements Serializable{
 	static final ActivationFunction[] FUNCTIONS = new ActivationFunction[]{new ActivationFunction(){
 		@Override
 		public double compute(double val) {
@@ -76,20 +78,141 @@ public class SimpleNetwork {
 		threadPool.shutdownNow();
 	}
 	
-	private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException
+	private void writeObject(ObjectOutputStream stream) throws IOException
 	{
+		stream.writeInt(chosenFunction);
+		stream.writeDouble(updateRate);
 		
+		stream.writeInt(inputLabels.length);
+		for (Label l : inputLabels)
+		{
+			stream.writeObject(l.name);
+			stream.writeDouble(l.value);
+		}
+		
+		stream.writeInt(outputLabels.length);
+		for (Label l : outputLabels)
+		{
+			stream.writeObject(l.name);
+			stream.writeDouble(l.value);
+		}
+		
+		stream.writeInt(layerSizes.length);
+		for (int n : layerSizes)
+			stream.writeInt(n);
+		
+		stream.writeInt(inputMap.length);
+		stream.writeInt(inputMap[0].length);
+		stream.writeInt(inputMap[0][0].length);
+		for (int[][] mat : inputMap)
+			for (int[] arr : mat)
+				for (int n : arr)
+					stream.writeInt(n);
+		
+		stream.writeInt(outputMap.length);
+		stream.writeInt(outputMap[0].length);
+		stream.writeInt(outputMap[0][0].length);
+		for (int[][] mat : outputMap)
+			for (int[] arr : mat)
+				for (int n : arr)
+					stream.writeInt(n);
+		
+		stream.writeInt(locations.length);
+		stream.writeInt(locations[0].length);
+		for (Point[] arr : locations)
+			for (Point p : arr)
+			{
+				stream.writeInt(p.getR());
+				stream.writeInt(p.getC());
+			}
+		
+		stream.writeInt(nodes.length);
+		for (Neuron node : nodes)
+		{
+			double[] weights = node.weights;
+			int[] inputs = node.inputs;
+			stream.writeInt(weights.length);
+			for (int i = 0; i < weights.length; i++)
+			{
+				stream.writeDouble(weights[i]);
+				stream.writeInt(inputs[i]);
+			}
+			stream.writeInt(node.row);
+			stream.writeInt(node.col);
+		}
+		stream.writeDouble(graph.getMaxDistance());
 	}
 	
-	public static SimpleNetwork createNetwork(ObjectInputStream stream)
+	private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException
 	{
-		SimpleNetwork n = new SimpleNetwork();
-		try {
-			n.readObject(stream);
-		} catch (ClassNotFoundException | IOException e) {
-			e.printStackTrace();
+		threadPool = Executors.newFixedThreadPool(8);
+		chosenFunction = stream.readInt();
+		updateRate = stream.readDouble();
+		int inputLabelLength = stream.readInt();
+		inputLabels = new Label[inputLabelLength];
+		for (int i = 0; i < inputLabelLength; i++)
+		{
+			inputLabels[i] = new Label(stream.readObject().toString(), stream.readDouble());
 		}
-		return n;
+		
+		int outputLabelLength = stream.readInt();
+		outputLabels = new Label[outputLabelLength];
+		for (int i = 0; i < outputLabelLength; i++)
+		{
+			outputLabels[i] = new Label(stream.readObject().toString(), stream.readDouble());
+		}
+		
+		int layerLength = stream.readInt();
+		layerSizes = new int[layerLength];
+		for (int i = 0 ; i < layerLength; i++)
+			layerSizes[i] = stream.readInt();
+		
+		int inputR = stream.readInt();
+		int inputC = stream.readInt();
+		int inputK = stream.readInt();
+		inputMap = new int[inputR][inputC][inputK];
+		for (int r = 0; r < inputR; r++)
+			for (int c = 0; c < inputC; c++)
+				for (int k = 0; k < inputK; k++)
+					inputMap[r][c][k] = stream.readInt();
+		
+		int outputR = stream.readInt();
+		int outputC = stream.readInt();
+		int outputK = stream.readInt();
+		outputMap = new int[outputR][outputC][outputK];
+		for (int r = 0; r < outputR; r++)
+			for (int c = 0; c < outputC; c++)
+				for (int k = 0; k < outputK; k++)
+					outputMap[r][c][k] = stream.readInt();
+		
+		int rows = stream.readInt();
+		int cols = stream.readInt();
+		locations = new Point[rows][cols];
+		for (int i = 0; i < rows; i++)
+			for (int j = 0; j < cols; j++)
+				locations[i][j] = new Point(stream.readInt(), stream.readInt());
+		
+		int numNodes = stream.readInt();
+		nodes = new Neuron[numNodes];
+		for (int i = 0; i < numNodes; i++)
+		{
+			int numWeights = stream.readInt();
+			double[] weights = new double[numWeights];
+			int[] inputs = new int[numWeights];
+			for (int j = 0; j < numWeights; j++)
+			{
+				weights[j] = stream.readDouble();
+				inputs[j] = stream.readInt();
+			}
+			int row = stream.readInt();
+			int col = stream.readInt();
+			nodes[i] = new Neuron(inputs, weights, row, col, this, FUNCTIONS[chosenFunction]);
+		}
+		
+		
+		// Must place as extra parameter (get from graph.maxDistance)
+		double maxDistance = stream.readDouble();
+		graph = NetworkGraph.getGraph(locations, maxDistance);
 	}
 	
 	
