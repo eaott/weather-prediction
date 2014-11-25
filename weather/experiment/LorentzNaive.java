@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import weather.network.Label;
-import weather.network.Network;
+import weather.network.SimpleNetwork;
 
 public class LorentzNaive {
 	public static void main(String[] args) throws Throwable
@@ -40,7 +40,7 @@ public class LorentzNaive {
 				new Label("z", 2)
 		};
 		
-		Network n = Network.naiveLinear(1, 1, labelArr, labelArr, HIDDEN, 1.0, res);
+		SimpleNetwork n = SimpleNetwork.naiveLinear(1, 1, labelArr, labelArr, HIDDEN, 1.0, res);
 		
 		System.out.println("Network created " + (System.currentTimeMillis() - start));
 		for (int iter = 0; iter < ITERATIONS; iter++)

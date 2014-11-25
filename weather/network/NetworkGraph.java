@@ -22,6 +22,10 @@ public class NetworkGraph {
 			return neighbors[r][c];
 		return generate(r, c);
 	}
+	public double getMaxDistance()
+	{
+		return maxDistance;
+	}
 	
 	public Point[][] getAllPoints()
 	{

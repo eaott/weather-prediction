@@ -1,6 +1,6 @@
 package weather.util;
 
-import weather.network.Network;
+import weather.network.SimpleNetwork;
 
 /**
  * Could be implemented with the Potts model, or something much more

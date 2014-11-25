@@ -2,6 +2,7 @@ package weather.experiment;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -13,43 +14,80 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Scanner;
 import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
 import weather.network.Label;
-import weather.network.Network;
-import weather.process.Voronoi;
+import weather.network.SimpleNetwork;
 import weather.util.DataIO;
-import weather.util.DistanceFunction;
-import weather.util.Point;
 import weather.util.Sensor;
+import weather.util.Serializer;
 import weather.util.Tuple;
 
 public class VoronoiSensors {
-	// tolerance for difference, in milliseconds
-	final static long TIME_TOLERANCE = 5 * 60 * 1000;
+	static final File rainDir = new File("C:\\Users\\Evan\\Dropbox\\Thesis_Data_Sensor\\");
+	static final File radarDir = new File("C:\\Users\\Evan\\GitProjects\\weather-prediction\\data2\\fullTest\\");
+	static final File sensorFile = new File(rainDir, "HydrometBook2.csv");
 	
-	final static int HIDDEN = 0;
-	
-	final static double MAX_DISTANCE = 1.0;
-	
-	final static double LEARNING_RATE = 0.15;
-	
-	final static int ITERATIONS = 1;
+	// Available radars.
+	static final String[] radarCodes = {"EWX"};
 	
 	public static void main(String[] args) throws Throwable{
-		System.out.printf("TIME_TOLERANCE: %d\nHIDDEN: %d\nMAX_DISTANCE: %f\n"
+		final long[] TIME_TOLERANCES = {1000 * 60 * 10};
+		final int[] HIDDENS = {0};
+		final double[] MAX_DISTANCES = {1.0};
+		final double[] LEARNING_RATES = {0.05};
+		final int[] NUM_ITERATIONS = {1};
+		final double[] TARGET_VALUES = {0.0};
+		CSVPrinter out = new CSVPrinter(new FileWriter(new File(radarDir, "dummy.csv")), CSVFormat.DEFAULT);
+		
+		out.print("TIME_TOLERANCE");
+		out.print("HIDDEN");
+		out.print("MAX_DISTANCE");
+		out.print("LEARNING_RATE");
+		out.print("ITERATIONS");
+		out.print("TARGET_VALUE");
+		out.print("TIME_FOR_ALL_SENSORS");
+		for (String radarCode : radarCodes)
+		{
+			out.print(radarCode + " STD");
+		}
+		out.println();
+		
+		
+		for (long TIME_TOLERANCE : TIME_TOLERANCES)
+			for (int HIDDEN : HIDDENS)
+				for (double MAX_DISTANCE : MAX_DISTANCES)
+					for (double LEARNING_RATE : LEARNING_RATES)
+						for (int ITERATIONS : NUM_ITERATIONS)
+							for (double TARGET_VALUE : TARGET_VALUES)
+							{
+								long time = System.currentTimeMillis();
+								double[] result = run(TIME_TOLERANCE, HIDDEN, MAX_DISTANCE, LEARNING_RATE, ITERATIONS, TARGET_VALUE);
+								out.print(TIME_TOLERANCE);
+								out.print(HIDDEN);
+								out.print(MAX_DISTANCE);
+								out.print(LEARNING_RATE);
+								out.print(ITERATIONS);
+								out.print(TARGET_VALUE);
+								out.print(System.currentTimeMillis() - time);
+								for (double d : result)
+									out.print(d);
+								out.println();
+							}
+		out.close();
+	}
+	
+	public static double[] run(long TIME_TOLERANCE, int HIDDEN, double MAX_DISTANCE, double LEARNING_RATE, int ITERATIONS, double TARGET_VALUE) throws Throwable
+	{
+		System.out.printf("TIME_TOLERANCE: %d\nHIDDEN: %d\nMAX_DISTANCE: %f\n" +
 			"LEARNING_RATE: %f\nITERATIONS: %d\n",TIME_TOLERANCE, HIDDEN, MAX_DISTANCE, LEARNING_RATE, ITERATIONS);
-
-		final File rainDir = new File("C:\\Users\\Evan\\Dropbox\\Thesis_Data\\");
-		final File radarDir = new File("C:\\Users\\Evan\\GitProjects\\weather-prediction\\data2\\fullTest\\");
-		final File sensorFile = new File(rainDir, "HydrometBook2.csv");
 		
 		// Map<String sensorName, Map<Long time, Double rainVal>>
 		final Map<String, TreeMap<Long, Double>> rainMap = new HashMap<>();
@@ -60,16 +98,12 @@ public class VoronoiSensors {
 		// Not really needed -- can remove.
 		final long randSeed = 14565415141784562L;
 		
-		// Available radars.
-		final String[] radarCodes = {"EWX", "GRK"}; //FIXME can look at one at a time.
-		
+		double[] RESULT = new double[radarCodes.length];
 		// All available rain sensors.
 		Sensor[] sensorArr = null;
 		
 		// 0xffRRGGBB colors for each sensor.
 		int[] colors = null;
-		
-		
 		
 		for (String radarCode : radarCodes)
 		{
@@ -100,13 +134,12 @@ public class VoronoiSensors {
 					}
 					
 					list.add(new Sensor(name, dlat, dlon));
-					
 					// Sensor is created. Now, read in its rain data.
-					File file = new File(rainDir, name + ".csv");
+					File file = new File(rainDir, name.trim() + ".csv");
 					if (!file.exists())
 						continue;
 					
-					rainMap.put(name, getRainValues(file));
+					rainMap.put(name.trim(), getRainValues(file));
 				}
 				p.close();
 				// Hacked way to create the array.
@@ -122,39 +155,9 @@ public class VoronoiSensors {
 					colors[i] = color;
 				}
 			}
-			
-			// For this radar, find its projection information.
-			Scanner boundaryIn = new Scanner(new File(radarDir, radarCode + "_N1P_0.gfw"));
-			double lonPerPx = boundaryIn.nextDouble();
-			boundaryIn.nextDouble(); // rotation
-			boundaryIn.nextDouble(); // rotation
-			double latPerPx = boundaryIn.nextDouble();
-			double startLon = boundaryIn.nextDouble();
-			double startLat = boundaryIn.nextDouble();
-			boundaryIn.close();
-			
-			// For this radar, find its image size.
-			BufferedImage sizeImg = ImageIO.read(new File(radarDir, radarCode + "_size.gif"));
-			int WIDTH = sizeImg.getWidth();
-			int HEIGHT = sizeImg.getWidth();
-			
-			// Convert points to coordinate system of the radar image.
-			Point[] convertedPoints = new Point[sensorArr.length];
-			for (int i = 0; i < convertedPoints.length; i++)
-			{
-				double dlat = sensorArr[i].getLat();
-				double dlon = sensorArr[i].getLon();
-				// on y axis
-				dlat = (dlat - startLat) / latPerPx;
-				dlon = (dlon - startLon) / lonPerPx;
-				
-				int x = (int)(Math.round(dlon));
-				int y = (int)(Math.round(dlat));
-				convertedPoints[i] = new Point(x, y);
-			}
-			
+	
 			// Calculation will take a long time.
-			int[][] data = Voronoi.generateMapSlow(WIDTH, HEIGHT, convertedPoints, DistanceFunction.EUCLIDEAN, true);
+			int[][] data = Serializer.readVoronoi(radarDir, radarCode);
 			
 			radarVoronoiMap.put(radarCode, data);
 			
@@ -171,7 +174,7 @@ public class VoronoiSensors {
 		// Map<String radarName, int[][] voronoi> sensorMap -- maps the sensors that correspond to each pixel for each radar.
 		// Sensor[] sensorArr -- all sensors (may not have data for all)
 		
-		
+		int RESULT_INDEX = 0;
 		for (final String radarCode : radarCodes)
 		{
 			FilenameFilter filter = new FilenameFilter(){
@@ -182,10 +185,15 @@ public class VoronoiSensors {
 			final int[][] voronoi = radarVoronoiMap.get(radarCode);
 			Tuple<Label[], Map<Integer,Integer>> tuple = DataIO.getLabels(radarDir, filter);
 			Label[] inputLabels = tuple.first();
+			
+			for (int value : tuple.second().keySet())
+				System.out.printf("%x\t", value);
+			System.out.println();
+			
 			Label[] outputLabels = {new Label("rain", 0)};
-			
-			Network n = Network.naiveLinear(voronoi.length, voronoi[0].length, inputLabels, outputLabels, HIDDEN, MAX_DISTANCE, LEARNING_RATE);
-			
+			System.out.println("creating network for " + radarCode);
+			SimpleNetwork n = SimpleNetwork.naiveLinear(voronoi.length, voronoi[0].length, inputLabels, outputLabels, HIDDEN, MAX_DISTANCE, LEARNING_RATE);
+			System.out.println("network created for " + radarCode);
 			final SimpleDateFormat radarParser = new SimpleDateFormat("'" + radarCode + "_'yyyyMMdd'_'HHmm'.gif'");
 			File[] radarFiles = radarDir.listFiles(filter);
 			
@@ -195,10 +203,13 @@ public class VoronoiSensors {
 				{				
 					double[][][] inputData = DataIO.getData(radarFile, tuple.second());
 					
-					long recordTime = radarParser.parse(radarFile.getName()).getTime();
+					Date date = radarParser.parse(radarFile.getName());
+										
+					long recordTime = date.getTime();
 	
-					double[][][] outputData = getRainfall(voronoi, sensorArr, rainMap, recordTime);
-				
+					// FIXME if TARGET_VALUE is included, it actually ignores all rain data.
+					double[][][] outputData = getRainfall(voronoi, sensorArr, rainMap, recordTime, TIME_TOLERANCE, inputData);
+									
 					n.train(inputData, outputData);
 				}
 			
@@ -206,16 +217,19 @@ public class VoronoiSensors {
 			
 
 			// Now, output stats on the difference.
-			double diff1 = 0, diff2 = 0;
+			double diff2 = 0;
 			for (File radarFile : radarFiles)
 			{				
 				double[][][] inputData = DataIO.getData(radarFile, tuple.second());
 				
 				long recordTime = radarParser.parse(radarFile.getName()).getTime();
 
-				double[][][] outputData = getRainfall(voronoi, sensorArr, rainMap, recordTime);
+				// FIXME if TARGET_VALUE is included, it actually ignores all rain data.
+				double[][][] outputData = getRainfall(voronoi, sensorArr, rainMap, recordTime, TIME_TOLERANCE, inputData);
 			
-				double[][][] predictedOutput = n.process(inputData);
+				n.processInput(inputData);
+				
+				double[][][] predictedOutput = n.getOutput();
 
 				for (int r = 0; r < outputData.length; r++)
 				{
@@ -224,15 +238,17 @@ public class VoronoiSensors {
 						for (int k = 0; k < outputData[0][0].length; k++)
 						{
 							double diff = predictedOutput[r][c][k] - outputData[r][c][k];
-							diff1 += diff;
 							diff2 += diff * diff;
 						}
 					}
 				}
 			}
+			n.close();
 			int N = voronoi.length * voronoi[0].length * outputLabels.length;
-			System.out.printf("%s: mean:%.8f stddev:%.8f\n", radarCode, diff1 / N, Math.sqrt(diff2 / (N - 1)));
+			RESULT[RESULT_INDEX++] = Math.sqrt(diff2 / (N - 1));
+			System.out.println(radarCode + " done");
 		}
+		return RESULT;
 	}
 
 	/**
@@ -258,19 +274,51 @@ public class VoronoiSensors {
 		return myRain;
 	}
 	
+	@SuppressWarnings("unused")
 	private static double[][][] getRainfall(
 			int[][] voronoi, 
 			Sensor[] sensorArr, 
 			Map<String, TreeMap<Long, Double>> rainMap,
-			long recordTime)
+			long recordTime,
+			final long TIME_TOLERANCE)
 	{
 		double[][][] outputData = new double[voronoi.length][voronoi[0].length][1];
 		for (int r = 0; r < voronoi.length; r++)
 			for (int c = 0; c < voronoi[0].length; c++)
 			{
-				Map.Entry<Long, Double> entry = rainMap.get(sensorArr[voronoi[r][c]].name).ceilingEntry(recordTime);
+				// FIXME test to see if it will converge to center.
+				outputData[r][c][0] = 0.5;
+				String name = sensorArr[voronoi[r][c]].name;
+				TreeMap<Long, Double> map = rainMap.get(name);
+				if (map == null)
+					continue;
+				Map.Entry<Long, Double> entry = map.ceilingEntry(recordTime);
 				if (entry != null && entry.getKey() - recordTime <= TIME_TOLERANCE)
+				{
+					System.out.printf("%s: %d %f\n",name, entry.getKey(), entry.getValue());
 					outputData[r][c][0] = entry.getValue();
+				}
+			}
+		return outputData;
+	}
+	
+	private static double[][][] getRainfall(
+			int[][] voronoi, 
+			Sensor[] sensorArr, 
+			Map<String, TreeMap<Long, Double>> rainMap,
+			long recordTime,
+			final long TIME_TOLERANCE,
+			double[][][] input)
+	{
+		double[][][] outputData = new double[voronoi.length][voronoi[0].length][1];
+		for (int r = 0; r < voronoi.length; r++)
+			for (int c = 0; c < voronoi[0].length; c++)
+			{
+				for (int k = 0; k < input[0][0].length; k++)
+				{
+					// FIXME, base this on the input...
+					outputData[r][c][0] = 0.5;
+				}
 			}
 		return outputData;
 	}
