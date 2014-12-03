@@ -17,14 +17,15 @@ public class CoordinateConversion
 			startDistBearingToLatLong(double dlat,
 									  double dlon,
 									  double dist,
-									  double bearing)
+									  double dbearing)
 	{
 		double rlat = Math.toRadians(dlat);
 		double rlon = Math.toRadians(dlon);
 		double delta = dist / EARTH_RADIUS;
+		double rbearing = Math.toRadians(dbearing);
 		double rlat2 = Math.asin(Math.sin(rlat) * Math.cos(delta) +
-								Math.cos(rlat) * Math.sin(delta) * Math.cos(bearing));
-		double rlon2 = dlon + Math.atan2(Math.sin(bearing) * Math.sin(delta) * Math.cos(rlat),
+								Math.cos(rlat) * Math.sin(delta) * Math.cos(rbearing));
+		double rlon2 = rlon + Math.atan2(Math.sin(rbearing) * Math.sin(delta) * Math.cos(rlat),
 			Math.cos(delta) - Math.sin(rlat) * Math.sin(rlat2));
 		double dlat2 = (Math.toDegrees(rlat2) + 720) % 360;
 		double dlon2 = (Math.toDegrees(rlon2) + 720) % 360;
@@ -32,7 +33,7 @@ public class CoordinateConversion
 	}
 
 	public static void main(String[] args) throws Throwable{
-		Tuple<Double, Double> res = startDistBearingToLatLong(34, 118, 3829, 250);
+		Tuple<Double, Double> res = startDistBearingToLatLong(34, 100, 1000, 270);
 		System.out.println(res.first());
 		System.out.println(res.second());
 	}
