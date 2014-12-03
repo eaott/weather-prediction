@@ -1,0 +1,84 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp codebase="http://www.ncdc.noaa.gov/wct/app" href="http://www.ncdc.noaa.gov/wct/wct-jnlp.php" spec="1.0+">
+  <information>
+    <title>NOAA Weather and Climate Toolkit</title>
+    <vendor>NOAA&apos;s National Climatic Data Center</vendor>
+    <homepage href="http://www.ncdc.noaa.gov/wct/" />
+    <description>NOAA Weather and Climate Toolkit:  The NOAA Weather and Climate Toolkit provides simple visualization of a variety of weather and climate data.  The Data Exporter facilitates the integration of weather and climate data into other applications, such as GIS, MatLAB, etc...  The Weather and Climate Toolkit application is launched via Java Web Start and run on the client machine while accessing data locally or remotely.  The Viewer provides tools for custom data overlays, animations and basic queries.  The export of images and movies is provided in multiple formats. The Data Exporter allows for data export in both vector polygon (Shapefile, Well-Known Text) and raster (GeoTIFF, ESRI Grid, NetCDF) formats.</description>
+    <description kind="short">Interactive Viewing and Data Export Tool for Climatic Data</description>
+    <icon height="16" href="noaalogo-plain.gif" kind="shortcut" width="16" />
+    <icon height="32" href="noaa_logo_50x50.png" kind="shortcut" width="32" />
+    <icon href="splash-homepage.jpg" kind="splash" />
+    <offline-allowed />
+    <shortcut online="true">
+      <desktop />
+      <menu submenu="NOAA&apos;s National Climatic Data Center" />
+      <related-content href="http://www.ncdc.noaa.gov/wct/" />
+    </shortcut>
+  </information>
+  <security>
+    <all-permissions />
+  </security>
+  <resources>
+    <property name="sun.awt.disableMixing" value="true" />
+    <property name="sun.java2d.d3d" value="false" />
+    <property name="jnlp.packEnabled" value="true" />
+    <j2se href="http://java.sun.com/products/autodl/j2se" initial-heap-size="100m" max-heap-size="812m" version="1.6.0+" />
+    <jar href="dist/wct-3.7.4.jar" />
+    <jar href="lib/jide-oss-3.2.3.jar" />
+    <jar href="lib/apache-bzip.jar" />
+    <jar href="lib/commons-codec-1.3.jar" />
+    <jar href="lib/fi-faidon-STEVE.jar" />
+    <jar href="lib/foxtrot-core-4.0.jar" />
+    <jar href="lib/ftpbean.jar" />
+    <jar href="lib/geotools-2.0.jar" />
+    <jar href="lib/hsqldb-1.8.0.1.jar" />
+    <jar href="lib/jai.jar" />
+    <jar href="lib/commons-compress-1.3.jar" />
+    <jar href="lib/jetprint-1.10.jar" />
+    <jar href="lib/jfree-fontchooser.jar" />
+    <jar href="lib/jsch-0.1.33-20070611.jar" />
+    <jar href="lib/jts-old.jar" />
+    <jar href="lib/junit-4.4.jar" />
+    <jar href="lib/looks-2.1.4.jar" />
+    <jar href="lib/oncrpc-xdr-partial-STEVE.jar" />
+    <jar href="lib/units-0.01.jar" />
+    <jar href="lib/vecmath.jar" />
+    <jar href="lib/xercesImpl.jar" />
+    <jar href="lib/jcommon-1.0.12.jar" />
+    <jar href="lib/commons-cli-1.1.jar" />
+    <jar href="lib/commons-io-1.4.jar" />
+    <jar href="lib/commons-lang-2.3.jar" />
+    <jar href="lib/commons-net-1.4.1.jar" />
+    <jar href="lib/swing-layout-1.0.3.jar" />
+    <jar href="lib/swingx-0.9.3.jar" />
+    <jar href="lib/toolsUI-4.3.jar" />
+    <jar href="lib/DJNativeSwing-1.0.1.jar" />
+    <jar href="lib/DJNativeSwing-SWT-1.0.1.jar" />
+    <jar href="lib/jna_WindowUtils.jar" />
+    <jar href="lib/jna-3.2.4.jar" />
+    <jar href="lib/xstream-1.4.1.jar" />
+  </resources>
+  <resources arch="x86" os="Windows">
+    <jar href="lib/swt/swt-3.7M6-win32-win32-x86.jar" />
+  </resources>
+  <resources arch="x86_64" os="Windows">
+    <jar href="lib/swt/swt-3.7M6-win32-win32-x86_64.jar" />
+  </resources>
+  <resources arch="amd64" os="Windows">
+    <jar href="lib/swt/swt-3.7M6-win32-win32-x86_64.jar" />
+  </resources>
+  <resources arch="x86" os="MacOS">
+    <jar href="lib/swt/swt-3.7M6-cocoa-macosx.jar" />
+  </resources>
+  <resources arch="x86_64" os="MacOS">
+    <jar href="lib/swt/swt-3.7M6-cocoa-macosx-x86_64.jar" />
+  </resources>
+  <resources arch="i386" os="MacOS">
+    <jar href="lib/swt/swt-3.7M6-cocoa-macosx-x86_64.jar" />
+  </resources>
+<application-desc main-class="gov.noaa.ncdc.wct.ui.WCTViewerSplash"> 
+</application-desc> 
+</jnlp> 
+
