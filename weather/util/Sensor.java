@@ -1,9 +1,11 @@
 package weather.util;
 
-public class Sensor
+import java.io.Serializable;
+
+public class Sensor implements Serializable
 {
 	public double val;
-	
+	private int id;
 	private final double lat;
 	private final double lon;
 	public String name;
@@ -14,9 +16,21 @@ public class Sensor
 		this.lon = lon;
 		this.val = val;
 	}
+	public Sensor(String name, int id, double lat, double lon, double val)
+	{
+		this.name = name;
+		this.id = id;
+		this.lat = lat;
+		this.lon = lon;
+		this.val = val;
+	}
 	public Sensor(String name, double lat, double lon)
 	{
 		this(name, lat, lon, 0);
+	}
+	public int getId()
+	{
+		return id;
 	}
 	public double getLat()
 	{

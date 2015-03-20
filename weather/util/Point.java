@@ -27,4 +27,8 @@ public class Point implements Comparable<Point>{
 			return r - arg0.r;
 		return c - arg0.c;
 	}
+	public String toString()
+	{
+		return r + " " + c;
+	}
 }

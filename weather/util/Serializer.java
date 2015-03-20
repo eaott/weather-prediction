@@ -39,4 +39,32 @@ public class Serializer {
  		}
 		return result;
 	}
+	
+	public static void writeSensors(Sensor[] sensors, File dir, String name)
+	{
+		String fullFilename = new File(dir, String.format("%s%s", name, VORONOI_SUFFIX)).getAbsolutePath();
+		try(FileOutputStream fileOut = new FileOutputStream(fullFilename);
+				ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+			out.writeInt(sensors.length);
+			for (Sensor s : sensors)
+				out.writeObject(s);
+		} catch (IOException e) {
+ 		}
+	}
+	public static Sensor[] readSensors(File dir, String name)
+	{
+		String filename = new File(dir, String.format("%s%s", name, VORONOI_SUFFIX)).getAbsolutePath();
+		Sensor[] result = null;
+		try(FileInputStream fileIn = new FileInputStream(filename);
+				ObjectInputStream in = new ObjectInputStream(fileIn)) {
+			int num = in.readInt();
+			result = new Sensor[num];
+			for(int i = 0; i < num; i++)
+			{
+				result[i] = (Sensor)in.readObject();
+			}
+		} catch (IOException | ClassNotFoundException e) {
+ 		}
+		return result;
+	}
 }

@@ -31,10 +31,15 @@ public class CoordinateConversion
 		double dlon2 = (Math.toDegrees(rlon2) + 720) % 360;
 		return new Tuple<Double, Double>(dlat2, dlon2);
 	}
-
-	public static void main(String[] args) throws Throwable{
-		Tuple<Double, Double> res = startDistBearingToLatLong(34, 100, 1000, 270);
-		System.out.println(res.first());
-		System.out.println(res.second());
+	
+	public static String degreeToDMS(double d)
+	{
+		String res = "";
+		res += (int)d + "" +((char)0x00B0);
+		double m = Math.abs((d - (int)d) * 60);
+		res += (int)(m) + "'";
+		double s = (m - (int)m) * 60;
+		res += (int)(s) + "\"";
+		return res;
 	}
 }
