@@ -12,11 +12,11 @@ public class NetCDFTest {
 		String filein = "C:\\Users\\Evan\\GitProjects\\weather-prediction\\data2\\KFWD_SDUS34_N1PGRK_201308012242"
 ;
 		NetcdfFile ncfile = NetcdfFile.open(filein);
-		System.out.println(ncfile.getVariables());
 		Variable var_precip = ncfile.findVariable("Precip1hr");
 		Array arr = var_precip.read();
-		for (int s : arr.getShape())
-			System.out.println(s);
+		float[][] data = (float[][])arr.copyToNDJavaArray();
+		System.out.println(data.length);
+		System.out.println(data[0].length);
 	}
 	
 
