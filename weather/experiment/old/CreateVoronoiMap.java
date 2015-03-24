@@ -1,4 +1,4 @@
-package weather.experiment;
+package weather.experiment.old;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Map;
 
 public class Serializer {
 	public static final String VORONOI_PREFIX = "voronoi_";
@@ -62,6 +63,35 @@ public class Serializer {
 			for(int i = 0; i < num; i++)
 			{
 				result[i] = (Sensor)in.readObject();
+			}
+		} catch (IOException | ClassNotFoundException e) {
+ 		}
+		return result;
+	}
+	
+	public static void writeRain(Map[] vals, File dir, String name)
+	{
+		String fullFilename = new File(dir, String.format("%s%s", name, VORONOI_SUFFIX)).getAbsolutePath();
+		try(FileOutputStream fileOut = new FileOutputStream(fullFilename);
+				ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+			out.writeInt(vals.length);
+			for (Map m : vals)
+				out.writeObject(m);
+		} catch (IOException e) {
+ 		}
+	}
+	
+	public static Map[] readRain(File dir, String name)
+	{
+		String filename = new File(dir, String.format("%s%s", name, VORONOI_SUFFIX)).getAbsolutePath();
+		Map[] result = null;
+		try(FileInputStream fileIn = new FileInputStream(filename);
+				ObjectInputStream in = new ObjectInputStream(fileIn)) {
+			int num = in.readInt();
+			result = new Map[num];
+			for(int i = 0; i < num; i++)
+			{
+				result[i] = (Map)in.readObject();
 			}
 		} catch (IOException | ClassNotFoundException e) {
  		}

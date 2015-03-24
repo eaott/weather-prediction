@@ -12,6 +12,11 @@ import org.apache.commons.csv.CSVRecord;
 import weather.util.Sensor;
 import weather.util.Serializer;
 
+/**
+ * Purpose: Create a nice Sensor[] with metadata about each sensor, fixing an order.
+ * @author Evan
+ *
+ */
 public class CreateSensors {
 
 	public static void main(String[] args) throws Throwable {

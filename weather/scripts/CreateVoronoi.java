@@ -25,6 +25,12 @@ import weather.util.Sensor;
 import weather.util.Serializer;
 import static weather.data.Constants.*;
 
+/**
+ * Purpose: Create img and serialized int[][] -> index to Sensor[] for later.
+ * Prereqs: Create Sensor[] using CreateSensors in the Thesis_Data folder
+ * @author Evan
+ *
+ */
 public class CreateVoronoi {
 
 	public static void main(String[] args) throws Throwable {
