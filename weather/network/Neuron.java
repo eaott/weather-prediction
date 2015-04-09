@@ -25,6 +25,29 @@ public class Neuron {
 		this.fn = fn;
 		this.n = n;
 	}
+	
+	public String getFn()
+	{
+		if (fn == null || weights.length == 0)
+			return null;
+		String function = fn.expr();
+		String sum = "";
+		for (int i = 0; i < weights.length; i++)
+		{
+			if (sum.length() > 0)
+				sum += " + ";
+			Neuron t = n.getNeuron(inputs[i]);
+			String tempFn = t.getFn();
+			if (tempFn == null && inputs[i] >= 0)
+				tempFn = "x" + inputs[i];
+			else if (tempFn == null)
+				tempFn = "1";
+			sum += String.format("%.8f*",weights[i]) + tempFn;
+		}
+		return String.format(function, sum);
+	}
+	
+	
 	public int getCol() {
 		return col;
 	}

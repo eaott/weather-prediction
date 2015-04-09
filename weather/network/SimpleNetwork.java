@@ -37,6 +37,10 @@ public class SimpleNetwork implements Serializable{
 		public double inverse(double val) {
 			return -Math.log(1.0/val - 1.0);
 		}
+		@Override
+		public String expr() {
+			return "(1.0 / (1.0 + E^(-(%s))))";
+		}
 		}};
 	static final int SIGMOID = 0;
 	

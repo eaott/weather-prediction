@@ -63,21 +63,32 @@ public class CreateVoronoi {
 			double latPerPx = GRK_SCALE;
 			double startLon = BOUND_W;
 			double startLat = BOUND_N;
-			int WIDTH = GRK_SIZE;
-			int HEIGHT = GRK_SIZE;
+			int WIDTH = GRK_WIDTH;
+			int HEIGHT = GRK_HEIGHT;
 			if (radarCode.equals("EWX"))
 			{
 				lonPerPx = EWX_SCALE;
 				latPerPx = EWX_SCALE;
-				WIDTH = EWX_SIZE;
-				HEIGHT = EWX_SIZE;
+				WIDTH = EWX_WIDTH;
+				HEIGHT = EWX_HEIGHT;
 			}
 			
+
 			/**
-			 * FIXME FIXME FIXME
+			 *     <------ x, c, lon ----->
+			 *  ^
+			 *  |
+			 *  |
+			 *  |
+			 *  y, r, lat
+			 *  |
+			 *  |
+			 *  |
+			 *  v
+			 *  
+			 *  
 			 * 
-			 * Add the offset into this calculation to figure out where
-			 * the sensors should be on the cropped image.
+			 * 
 			 */
 			
 			// Convert points to coordinate system of the radar image.
@@ -87,25 +98,25 @@ public class CreateVoronoi {
 				double dlat = sensorArr[i].getLat();
 				double dlon = sensorArr[i].getLon();
 				System.out.printf("%f %f\n",dlat,dlon);
-				// on y axis
+				// on y axis, which is also the r axis
 				dlat = (dlat - startLat) / latPerPx;
 				dlon = (dlon - startLon) / lonPerPx;
 				System.out.printf("%f %f\n",dlat,dlon);
 				int x = (int)(Math.round(dlon));
 				int y = (int)(Math.round(dlat));
-				convertedPoints[i] = new Point(x, -y);
+				convertedPoints[i] = new Point(-y, x);
 				System.out.println(convertedPoints[i]);
 			}
 			
 			// Calculation will take a long time.
-			int[][] data = Voronoi.generateMapSlow(WIDTH, HEIGHT, convertedPoints, DistanceFunction.EUCLIDEAN, true);
+			int[][] data = Voronoi.generateMapSlow(HEIGHT, WIDTH, convertedPoints, DistanceFunction.EUCLIDEAN, true);
 			
 			Serializer.writeVoronoi(data, radarDir, radarCode);
 			
-			BufferedImage img = new BufferedImage(data.length, data[0].length, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage img = new BufferedImage(data[0].length, data.length, BufferedImage.TYPE_INT_ARGB);
 			for (int r = 0; r < data.length; r++) {
 				for (int c = 0; c < data[0].length; c++) {
-					img.setRGB(r, c, colors[data[r][c] % colors.length]);
+					img.setRGB(c, r, colors[data[r][c] % colors.length]);
 				}
 			}
 			ImageIO.write(img, "gif", new File(radarDir, "Voronoi_" + radarCode + "_test.gif"));

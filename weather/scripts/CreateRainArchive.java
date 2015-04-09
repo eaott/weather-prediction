@@ -3,9 +3,12 @@ package weather.scripts;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeMap;
 
+import static weather.data.Constants.*;
 import weather.util.Sensor;
 import weather.util.Serializer;
 
@@ -48,6 +51,25 @@ public class CreateRainArchive {
 			System.out.println((i + 1.0) / map.length);
 			in.close();
 		}
-		Serializer.writeRain(map, rainDir, "RAINMAP");
+		
+		TreeMap[] maps = new TreeMap[sensors.length];
+		for (int i = 0; i < map.length; i++)
+		{
+			TreeMap<Long, Double> smallTreeMap = (TreeMap<Long,Double>)map[i];
+			TreeMap<Long, Double> hourTreeMap = new TreeMap<>();
+			for (Long t : smallTreeMap.keySet())
+			{
+				double val = smallTreeMap.get(t);
+				Long curTime = smallTreeMap.lowerKey(t);
+				while (curTime != null && t.longValue() - curTime.longValue() <= HOUR)
+				{
+					val += smallTreeMap.get(curTime);
+					curTime = smallTreeMap.lowerKey(curTime);
+				}
+				hourTreeMap.put(t, val);
+			}
+			maps[i] = hourTreeMap;
+		}
+		Serializer.writeRain(maps, rainDir, "RAINMAP");
 	}
 }

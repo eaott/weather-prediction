@@ -1,21 +1,31 @@
 package weather.util;
 
+import static weather.data.Constants.ALLOWED_TIME;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 
+import ucar.ma2.Array;
+import ucar.nc2.NetcdfFile;
+import ucar.nc2.Variable;
 import weather.network.Label;
 
 public class DataIO {
+	static SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmm");
 	/**
 	 * Identifies the labels in the directory.
 	 * 
@@ -58,7 +68,60 @@ public class DataIO {
 		}
 		return new Tuple<>(labelArr, map);
 	}
+	
+	public static Tuple<double[][][], Double> getOutput(int[][] grk_voronoi, File file, Map[] maps) throws Throwable
+	{
+		double[][][] output_region = new double[grk_voronoi.length][grk_voronoi[0].length][1];
+		
+		// Prune data by output first...
+		String datestring = file.getName().substring(7);
+		Date date = format.parse(datestring);
+		long t = date.getTime();
+		
+		double count = 0;
+		for (int r = 0; r < grk_voronoi.length; r++)
+		{
+			for (int c = 0; c < grk_voronoi[0].length; c++)
+			{
+				int bestSensorIndex = grk_voronoi[r][c];
+				TreeMap<Long, Double> map = (TreeMap<Long,Double>)maps[bestSensorIndex];
+				Entry<Long, Double> low = map.floorEntry(t);
+				Entry<Long, Double> high = map.ceilingEntry(t);
+				Entry<Long, Double> best = null;
+				if (low == null)
+					best = high;
+				else if (high == null)
+					best = low;
+				else
+					best = (Math.abs(low.getKey() - t) < Math.abs(high.getKey()) - t) ? low : high;
+				if (best != null && Math.abs(best.getKey() - t) < ALLOWED_TIME)
+				{
+					output_region[r][c][0] = best.getValue();
+					count++;
+				}
+			}
+		}
+		return new Tuple<>(output_region, count / (grk_voronoi.length * grk_voronoi[0].length));
+	}
+	
+	public static double[][][] getInput(int[][] grk_voronoi, File file, Point[][] coordinateMap) throws Throwable
+	{
+		double[][][] input_region = new double[grk_voronoi.length][grk_voronoi[0].length][1];
+		NetcdfFile ncfile = NetcdfFile.open(file.getAbsolutePath());
+		Variable var_precip = ncfile.findVariable("Precip1hr");
+		Array arr = var_precip.read();
+		float[][] data = (float[][])arr.copyToNDJavaArray();
+		for (int r = 0; r < input_region.length; r++)
+			for (int c = 0; c < input_region[0].length; c++)
+			{
+				int theta = coordinateMap[r][c].getR();
+				int dist = coordinateMap[r][c].getC();
+				input_region[r][c][0] = data[theta][dist];
+			}
+		return input_region;
+	}
 
+	@Deprecated
 	public static double[][][] getData(File file, Map<Integer, Integer> labels) {
 		BufferedImage img;
 		try {
@@ -80,25 +143,5 @@ public class DataIO {
 		return results;
 	}
 
-	public static void writeData(File f, double[][][] data,
-			Map<Integer, Integer> labels) {
-		try {
-			BufferedImage img = new BufferedImage(data.length, data[0].length,
-					BufferedImage.TYPE_INT_ARGB);
-			for (int r = 0; r < data.length; r++) {
-				for (int c = 0; c < data[0].length; c++) {
-					int maxIndex = 0;
-					for (int k = 0; k < data[0][0].length; k++) {
-						if (data[r][c][k] > data[r][c][maxIndex])
-							maxIndex = k;
-					}
 
-					img.setRGB(r, c, labels.get(maxIndex));
-				}
-			}
-
-			ImageIO.write(img, "gif", f);
-		} catch (Throwable t) {
-		}
-	}
 }

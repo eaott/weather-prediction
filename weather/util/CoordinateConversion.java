@@ -29,6 +29,8 @@ public class CoordinateConversion
 			Math.cos(delta) - Math.sin(rlat) * Math.sin(rlat2));
 		double dlat2 = (Math.toDegrees(rlat2) + 720) % 360;
 		double dlon2 = (Math.toDegrees(rlon2) + 720) % 360;
+		if (dlon2 > 180)
+			dlon2 = dlon2 - 360;
 		return new Tuple<Double, Double>(dlat2, dlon2);
 	}
 	
