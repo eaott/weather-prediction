@@ -69,8 +69,8 @@ public class Constants {
 	
 	public static final int EWX_N_OFFSET = (int)((BOUND_N - EWX_N) / EWX_SCALE + 0.5);
 	public static final int EWX_E_OFFSET = (int)((BOUND_W - EWX_W) / EWX_SCALE + 0.5);
-	public static final int EWX_HEIGHT = (int)(GRK_HEIGHT * GRK_SCALE / EWX_SCALE + 0.5);
-	public static final int EWX_WIDTH = (int)(GRK_WIDTH * GRK_SCALE / EWX_SCALE + 0.5);
+	public static final int EWX_HEIGHT = (int)(GRK_HEIGHT * GRK_SCALE / EWX_SCALE);
+	public static final int EWX_WIDTH = (int)(GRK_WIDTH * GRK_SCALE / EWX_SCALE);
 	
 	/**
 	 * Creates the extended image.

@@ -41,7 +41,7 @@ public class CreateVoronoi {
 		Random rand = new Random();
 		rand.setSeed(Constants.RAND_SEED);
 		// Available radars.
-		final String[] radarCodes = {"EWX", "GRK"};
+		final String[] radarCodes = {"EWX"};
 		
 		// All available rain sensors.
 		Sensor[] sensorArr = Serializer.readSensors(rainDir, "\\LCRA\\SENSORS");

@@ -69,7 +69,7 @@ public class DataIO {
 		return new Tuple<>(labelArr, map);
 	}
 	
-	public static Tuple<double[][][], Double> getOutput(int[][] grk_voronoi, File file, Map[] maps) throws Throwable
+	public static Tuple<double[][][], Double> getRainDataFromMaps(int[][] grk_voronoi, File file, Map[] maps) throws Throwable
 	{
 		double[][][] output_region = new double[grk_voronoi.length][grk_voronoi[0].length][1];
 		
@@ -104,7 +104,7 @@ public class DataIO {
 		return new Tuple<>(output_region, count / (grk_voronoi.length * grk_voronoi[0].length));
 	}
 	
-	public static double[][][] getInput(int[][] grk_voronoi, File file, Point[][] coordinateMap) throws Throwable
+	public static double[][][] getDataFromNetCDF(int[][] grk_voronoi, File file, Point[][] coordinateMap) throws Throwable
 	{
 		double[][][] input_region = new double[grk_voronoi.length][grk_voronoi[0].length][1];
 		NetcdfFile ncfile = NetcdfFile.open(file.getAbsolutePath());
@@ -117,6 +117,10 @@ public class DataIO {
 				int theta = coordinateMap[r][c].getR();
 				int dist = coordinateMap[r][c].getC();
 				input_region[r][c][0] = data[theta][dist];
+				if (Double.isNaN(input_region[r][c][0]))
+				{
+					input_region[r][c][0] = 0;
+				}
 			}
 		return input_region;
 	}

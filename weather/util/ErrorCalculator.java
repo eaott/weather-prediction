@@ -14,49 +14,44 @@ import java.util.Map.Entry;
 import weather.network.SimpleNetwork;
 
 public class ErrorCalculator {
-	public static double mse(File[] allFiles, Set<String> unusableFiles, SimpleNetwork n, int[][] grk_voronoi, Point[][] coordinateMap, Map[] maps) throws Throwable
+	public static double mse(String[] usableFiles, Set<String> testCases, SimpleNetwork n, int[][] grk_voronoi, int[][] input_voronoi, Point[][] coordinateMap, Map[] maps, boolean test) throws Throwable
 	{
 		double errorTotal = 0;
 		int totalFiles = 0;
 		
-		final File dir = new File("C:\\Users\\Evan\\Dropbox\\Thesis_Data\\");
-		final File rainDir = new File(dir, "LCRA");
-		long startOfAllIters = System.currentTimeMillis();
-		double filesComplete = 0;
-		System.out.println("starting");
-		for (File file : allFiles)
+		for (String filename : usableFiles)
 		{
-			if (unusableFiles.contains(file.getName()))
+			if (test && !testCases.contains(filename))
 				continue;
-			if (file.getName().contains("USABLE") || file.getName().contains("testNetwork"))
+			if (!test && testCases.contains(filename))
 				continue;
-			System.out.println("got here");
-			Tuple<double[][][], Double> output_percent = DataIO.getOutput(grk_voronoi, file, maps);
+			File file = new File(filename);
+
+			Tuple<double[][][], Double> output_percent = DataIO.getRainDataFromMaps(grk_voronoi, file, maps);
 			double[][][] output_region = output_percent.first();
 			double percent = output_percent.second();
 			
-			filesComplete++;
-			double percentdone = (filesComplete) / (allFiles.length - unusableFiles.size());
 			if (percent < PERCENT_COVERAGE)
 				continue;
-			if (percentdone > 0.01)
-				System.out.println(System.currentTimeMillis() - startOfAllIters);
 			
-			double[][][] input_region = DataIO.getInput(grk_voronoi, file, coordinateMap);
+			double[][][] input_netCDF = DataIO.getDataFromNetCDF(grk_voronoi, file, coordinateMap);
+			double[][][] input_voronoi_rain = DataIO.getRainDataFromMaps(input_voronoi, file, maps).first();
+			double[][][] input_region = new double[input_netCDF.length][input_netCDF[0].length][2];
+			for (int r = 0; r < input_region.length; r++)
+				for (int c = 0; c < input_region[0].length; c++)
+				{
+					input_region[r][c][0] = input_netCDF[r][c][0];
+					input_region[r][c][1] = input_voronoi_rain[r][c][0];
+				}
 
 			n.processInput(input_region);
 			
 			double[][][] observed_output = n.getOutput();
 			
 			double mse = mse(observed_output, output_region, file.getName());
-			if (mse < 0 || Double.isNaN(mse) || Double.isInfinite(mse))
-			{
-				System.out.println(mse + "----" + file.getName());
-			}
-			else {
-				errorTotal += mse;
-				totalFiles++;
-			}
+			errorTotal += mse;
+			totalFiles++;
+			System.out.println("Current mse:" + (errorTotal / totalFiles));
 		}
 		if (Double.isNaN(errorTotal) || Double.isInfinite(errorTotal))
 		{
