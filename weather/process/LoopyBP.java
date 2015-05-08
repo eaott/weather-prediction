@@ -48,11 +48,13 @@ public class LoopyBP {
 		}
 		return result;
 	}
-	private static Map<Point, Map<Point, double[]>> iter(NetworkGraph g,
-			Map<Point, Map<Point, double[]>> messages, double[][][] input,
-			PairwiseFunction fn) {
+	
+	private static Map<Point, Map<Point, double[]>> iter(final NetworkGraph g,
+			final Map<Point, Map<Point, double[]>> messages, final double[][][] input,
+			final PairwiseFunction fn) {
 		// May not want neuron... may want Point instead...
-		Map<Point, Map<Point, double[]>> updated = new HashMap<>();
+		final Map<Point, Map<Point, double[]>> updated = new HashMap<>();
+		
 		for (int rowA = 0; rowA < input.length; rowA++)
 		{
 			for (int colA = 0; colA < input[0].length; colA++)

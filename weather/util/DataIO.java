@@ -22,6 +22,7 @@ import javax.imageio.ImageIO;
 import ucar.ma2.Array;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
+import weather.data.Constants;
 import weather.network.Label;
 
 public class DataIO {
@@ -96,7 +97,7 @@ public class DataIO {
 					best = (Math.abs(low.getKey() - t) < Math.abs(high.getKey()) - t) ? low : high;
 				if (best != null && Math.abs(best.getKey() - t) < ALLOWED_TIME)
 				{
-					output_region[r][c][0] = best.getValue();
+					output_region[r][c][0] = best.getValue() / Constants.RAIN_MAX;
 					count++;
 				}
 			}
@@ -116,7 +117,7 @@ public class DataIO {
 			{
 				int theta = coordinateMap[r][c].getR();
 				int dist = coordinateMap[r][c].getC();
-				input_region[r][c][0] = data[theta][dist];
+				input_region[r][c][0] = data[theta][dist] / Constants.RAIN_MAX;
 				if (Double.isNaN(input_region[r][c][0]))
 				{
 					input_region[r][c][0] = 0;

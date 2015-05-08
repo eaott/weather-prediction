@@ -33,8 +33,7 @@ import static weather.util.CoordinateConversion.degreeToDMS;
  *
  */
 public class Constants {
-	public static final double RAIN_AVG = 0.0054;
-	public static final double RAIN_STDDEV = 0.0796;
+	public static final double RAIN_MAX = 5.16;
 	
 	public static final long RAND_SEED = 14565415141784562L;
 	public static final double PERCENT_COVERAGE = .65;
@@ -70,7 +69,7 @@ public class Constants {
 	public static final int EWX_N_OFFSET = (int)((BOUND_N - EWX_N) / EWX_SCALE + 0.5);
 	public static final int EWX_E_OFFSET = (int)((BOUND_W - EWX_W) / EWX_SCALE + 0.5);
 	public static final int EWX_HEIGHT = (int)(GRK_HEIGHT * GRK_SCALE / EWX_SCALE);
-	public static final int EWX_WIDTH = (int)(GRK_WIDTH * GRK_SCALE / EWX_SCALE);
+	public static final int EWX_WIDTH = (int)(GRK_WIDTH * GRK_SCALE / EWX_SCALE) - 1;
 	
 	/**
 	 * Creates the extended image.
